@@ -1,0 +1,86 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Testing
+coverage/
+*.lcov
+
+# Production builds
+build/
+dist/
+
+# Environment
+.env
+.env.local
+.env.*.local
+.env.qa
+.env.production
+
+# AWS
+.aws-sam/
+samconfig.toml
+*.zip
+
+# Terraform state (sensitive - DO NOT COMMIT)
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+tfplan
+*.backup
+*.old
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# Teams
+.publish/
+
+# ========================================
+# Excluded from repo (development only)
+# ========================================
+
+# Scripts (local development)
+scripts/
+
+# Documentation (except README)
+docs/
+SOLUCION-ERROR-API.md
+ARQUITECTURA-COMPLETA.md
+DEPLOYMENT_GUIDE.md
+SETUP_TEAMS_GUIDE.md
+
+# Temporary and cache
+*.tmp
+*.temp
+.cache/
+bucket-name.txt
+
+# Infrastructure prod (managed via PR only)
+# infrastructure/prod/
+*.dev.env
+
+# Temp
+temp/
+tmp/
+*.tmp
+
+# Secrets
+secrets.json
+credentials.json

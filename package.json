@@ -1,0 +1,33 @@
+{
+  "name": "ucehub",
+  "version": "0.1.0",
+  "description": "UCE Services Hub - Microsoft Teams Integration",
+  "private": true,
+  "workspaces": [
+    "teams-app",
+    "services/*"
+  ],
+  "scripts": {
+    "install:all": "npm install && npm run install:teams && npm run install:services",
+    "install:teams": "cd teams-app && npm install",
+    "install:services": "cd services/auth-service && npm install",
+    "dev:teams": "cd teams-app && npm run dev",
+    "build:teams": "cd teams-app && npm run build",
+    "deploy:qa": "node scripts/deploy-qa.js",
+    "deploy:prod": "node scripts/deploy-prod.js",
+    "test": "npm run test --workspaces",
+    "lint": "eslint . --ext .ts,.tsx",
+    "format": "prettier --write \"**/*.{ts,tsx,json,md}\""
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.50.0",
+    "prettier": "^3.0.0",
+    "typescript": "^5.2.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}

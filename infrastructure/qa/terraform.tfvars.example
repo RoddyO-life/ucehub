@@ -1,0 +1,27 @@
+# ========================================
+# UCEHub Infrastructure - QA Environment
+# ========================================
+# Este archivo NO debe subirse al repositorio
+# Copia terraform.tfvars.example y personaliza
+
+# Configuración AWS
+aws_region = "us-east-1"
+
+# Proyecto
+project_name = "ucehub"
+environment  = "qa"
+
+# Networking
+vpc_cidr             = "10.0.0.0/16"
+availability_zones   = ["us-east-1a", "us-east-1b"]
+
+public_subnets_cidr       = ["10.0.1.0/24", "10.0.2.0/24"]
+private_app_subnets_cidr  = ["10.0.10.0/24", "10.0.11.0/24"]
+private_data_subnets_cidr = ["10.0.20.0/24", "10.0.21.0/24"]
+
+# Tags
+tags = {
+  CostCenter = "IT"
+  Department = "Engineering"
+  Owner      = "rjortega@uce.edu.ec"
+}

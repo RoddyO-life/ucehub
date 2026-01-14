@@ -1,0 +1,55 @@
+{
+  "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.16/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.16",
+  "version": "1.0.0",
+  "id": "a7f8e5c2-3d4b-5c6e-7f8a-9b0c1d2e3f4a",
+  "packageName": "com.uce.ucehub",
+  "developer": {
+    "name": "Universidad Central del Ecuador",
+    "websiteUrl": "https://www.uce.edu.ec",
+    "privacyUrl": "https://www.uce.edu.ec/privacidad",
+    "termsOfUseUrl": "https://www.uce.edu.ec/terminos"
+  },
+  "icons": {
+    "color": "color-icon.png",
+    "outline": "outline-icon.png"
+  },
+  "name": {
+    "short": "UCEHub",
+    "full": "UCE Services Hub - Portal Universitario"
+  },
+  "description": {
+    "short": "Portal de servicios universitarios UCE",
+    "full": "Aplicación oficial para acceder a servicios universitarios: matrículas, documentos, horarios y más."
+  },
+  "accentColor": "#0078D4",
+  "configurableTabs": [],
+  "staticTabs": [
+    {
+      "entityId": "home",
+      "name": "Inicio",
+      "contentUrl": "http://localhost:3000/",
+      "websiteUrl": "http://localhost:3000/",
+      "scopes": ["personal"]
+    },
+    {
+      "entityId": "auth",
+      "name": "Login",
+      "contentUrl": "http://localhost:3000/auth",
+      "websiteUrl": "http://localhost:3000/auth",
+      "scopes": ["personal"]
+    }
+  ],
+  "permissions": [
+    "identity",
+    "messageTeamMembers"
+  ],
+  "validDomains": [
+    "localhost:3000",
+    "ucehub-alb-qa-571412803.us-east-1.elb.amazonaws.com"
+  ],
+  "webApplicationInfo": {
+    "id": "a7f8e5c2-3d4b-5c6e-7f8a-9b0c1d2e3f4a",
+    "resource": "http://localhost:3000"
+  }
+}

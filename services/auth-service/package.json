@@ -1,0 +1,16 @@
+{
+  "name": "auth-service",
+  "version": "1.0.0",
+  "description": "UCEHub Authentication Service - AWS Lambda",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "zip": "powershell Compress-Archive -Path index.js -DestinationPath function.zip -Force",
+    "deploy": "npm run zip && aws lambda update-function-code --function-name ucehub-auth-service-qa --zip-file fileb://function.zip --region us-east-1"
+  },
+  "keywords": ["lambda", "auth", "ucehub"],
+  "author": "UCE",
+  "license": "ISC",
+  "dependencies": {},
+  "devDependencies": {}
+}
