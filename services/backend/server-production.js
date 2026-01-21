@@ -502,6 +502,102 @@ app.get('/justifications/list', async (req, res) => {
 });
 
 // ========================================
+// DOCUMENT ENDPOINTS
+// ========================================
+
+// Download document
+app.get('/documents/download/:documentId/:fileName', async (req, res) => {
+  try {
+    const { documentId, fileName } = req.params;
+    
+    if (!documentId || !fileName || !DOCUMENTS_BUCKET) {
+      return res.status(400).json({
+        success: false,
+        message: 'Parámetros requeridos faltantes',
+        instance: instanceIP
+      });
+    }
+
+    const documentKey = `justifications/${documentId}/${fileName}`;
+    
+    console.log('[Document] Downloading:', documentKey);
+
+    try {
+      const response = await s3Client.send(new GetObjectCommand({
+        Bucket: DOCUMENTS_BUCKET,
+        Key: documentKey
+      }));
+
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      
+      // Pipe the stream to response
+      response.Body.pipe(res);
+    } catch (s3Error) {
+      console.error('[Document] S3 Error:', s3Error.message);
+      res.status(404).json({
+        success: false,
+        message: 'Documento no encontrado',
+        error: s3Error.message,
+        instance: instanceIP
+      });
+    }
+  } catch (error) {
+    console.error('[Document Download] Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al descargar documento',
+      error: error.message,
+      instance: instanceIP
+    });
+  }
+});
+
+// Get document via presigned URL (already exists, but documented here)
+app.get('/documents/presigned/:documentId/:fileName', async (req, res) => {
+  try {
+    const { documentId, fileName } = req.params;
+    
+    if (!documentId || !fileName || !DOCUMENTS_BUCKET) {
+      return res.status(400).json({
+        success: false,
+        message: 'Parámetros requeridos faltantes',
+        instance: instanceIP
+      });
+    }
+
+    const documentKey = `justifications/${documentId}/${fileName}`;
+    
+    // Generate presigned URL (valid for 1 hour)
+    const presignedUrl = await getSignedUrl(s3Client, new GetObjectCommand({
+      Bucket: DOCUMENTS_BUCKET,
+      Key: documentKey
+    }), { expiresIn: 3600 });
+
+    console.log('[Document] Presigned URL generated:', documentKey);
+
+    res.json({
+      success: true,
+      data: {
+        url: presignedUrl,
+        fileName,
+        expiresIn: 3600
+      },
+      instance: instanceIP
+    });
+  } catch (error) {
+    console.error('[Document Presigned] Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al generar URL presignada',
+      error: error.message,
+      instance: instanceIP
+    });
+  }
+});
+
+// ========================================
 // START SERVER
 // ========================================
 

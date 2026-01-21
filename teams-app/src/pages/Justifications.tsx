@@ -279,46 +279,50 @@ export const Justifications: React.FC = () => {
 
   const handleSubmit = async () => {
     if (!selectedFile || !reason || !startDate) {
-      setError('Por favor completa todos los campos.')
+      setError('Por favor completa todos los campos requeridos.')
       return
     }
 
     setLoading(true)
     try {
-      // Read file as base64
       const reader = new FileReader()
       reader.onload = async () => {
         try {
-          const base64String = reader.result as string
+          // Extrae solo la parte base64 (sin el prefijo data:application/pdf;base64,)
+          const base64String = (reader.result as string).split(',')[1] || reader.result
           
-          const apiUrl = import.meta.env.VITE_API_URL
-          await axios.post(`${apiUrl}/justifications/submit`, {
-            reason,
-            startDate,
-            endDate: endDate || startDate,
-            userEmail: 'user@ucehub.edu.ec',
-            userName: 'Estudiante',
+          const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+          const response = await axios.post(`${apiUrl}/justifications/submit`, {
+            reason: reason.trim(),
+            date: startDate,
+            studentId: 'EST-' + new Date().getTime(),
+            userEmail: 'estudiante@ucehub.edu.ec',
+            userName: 'Estudiante UCE',
             documentBase64: base64String,
             documentName: selectedFile.name
           }, {
             headers: { 'Content-Type': 'application/json' }
           })
 
+          console.log('Justification submitted:', response.data)
           setSuccess(true)
           setSelectedFile(null)
           setReason('')
           setStartDate('')
           setEndDate('')
+          if (fileInputRef.current) fileInputRef.current.value = ''
           
           setTimeout(() => setSuccess(false), 3000)
         } catch (err: any) {
-          setError(err.response?.data?.error || 'Error al enviar justificación.')
+          console.error('Submit error:', err)
+          setError(err.response?.data?.message || 'Error al enviar la justificación.')
           setLoading(false)
         }
       }
       reader.readAsDataURL(selectedFile)
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Error al procesar archivo.')
+      console.error('Error:', err)
+      setError('Error al procesar el archivo.')
       setLoading(false)
     }
   }

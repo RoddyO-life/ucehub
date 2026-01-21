@@ -194,7 +194,11 @@ const Home = ({ teamsContext, isInTeams }: HomeProps) => {
   }
 
   const handleServiceClick = (route: string) => {
-    if (route) {
+    if (route === '/monitoring') {
+      // Abre Grafana en una nueva ventana
+      const grafanaUrl = import.meta.env.VITE_GRAFANA_URL || 'http://localhost:3000'
+      window.open(grafanaUrl, '_blank')
+    } else if (route) {
       navigate(route)
     }
   }
@@ -220,6 +224,13 @@ const Home = ({ teamsContext, isInTeams }: HomeProps) => {
       description: 'Solicita ayuda y reporta problemas',
       icon: '🎫',
       route: '/support'
+    },
+    {
+      id: 4,
+      title: 'Monitoreo (Grafana)',
+      description: 'Visualiza métricas y estadísticas del sistema',
+      icon: '📊',
+      route: '/monitoring'
     },
   ]
 

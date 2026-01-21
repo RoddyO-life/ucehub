@@ -286,26 +286,36 @@ export const Support: React.FC = () => {
     }
 
     setLoading(true)
+    setError('')
     try {
-      const apiUrl = import.meta.env.VITE_API_URL
-      await axios.post(`${apiUrl}/support/ticket`, {
-        title,
-        description,
-        category,
-        priority,
-        userEmail: 'user@ucehub.edu.ec',
-        userName: 'Estudiante'
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+      const response = await axios.post(`${apiUrl}/support/ticket`, {
+        title: title.trim(),
+        description: description.trim(),
+        category: category || 'general',
+        priority: priority || 'medium',
+        userEmail: 'estudiante@ucehub.edu.ec',
+        userName: 'Estudiante UCE',
+        subject: title.trim()
+      }, {
+        headers: { 'Content-Type': 'application/json' }
       })
 
+      console.log('Ticket created:', response.data)
       setSuccess(true)
       setTitle('')
       setDescription('')
       setCategory('technical')
       setPriority('medium')
       
-      setTimeout(() => setSuccess(false), 3000)
+      setTimeout(() => {
+        setSuccess(false)
+        // Reload tickets list
+        window.location.reload()
+      }, 2000)
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Error al crear ticket.')
+      console.error('Submit error:', err)
+      setError(err.response?.data?.message || 'Error al crear el ticket.')
     } finally {
       setLoading(false)
     }
