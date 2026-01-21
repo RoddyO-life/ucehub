@@ -28,6 +28,11 @@ import {
 } from '@fluentui/react-icons'
 import axios from 'axios'
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 
+                     import.meta.env.VITE_BACKEND_URL ||
+                     'http://ucehub-alb-qa-933851656.us-east-1.elb.amazonaws.com' ||
+                     'http://localhost:3001'
+
 const useStyles = makeStyles({
   container: {
     ...shorthands.padding('24px'),
@@ -98,15 +103,13 @@ export default function Cafeteria() {
   const [paymentMethod, setPaymentMethod] = useState('cash')
   const [submitting, setSubmitting] = useState(false)
 
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001'
-
   useEffect(() => {
     loadMenu()
   }, [])
 
   const loadMenu = async () => {
     try {
-      const response = await axios.get(`${API_URL}/cafeteria/menu`)
+      const response = await axios.get(`${API_BASE_URL}/cafeteria/menu`)
       setMenu(response.data.data)
     } catch (error) {
       console.error('Error loading menu:', error)
@@ -156,7 +159,7 @@ export default function Cafeteria() {
         paymentMethod
       }
 
-      const response = await axios.post(`${API_URL}/api/cafeteria/order`, orderData)
+      const response = await axios.post(`${API_BASE_URL}/cafeteria/order`, orderData)
       
       alert(`¡Pedido realizado con éxito! ID: ${response.data.data.orderId}\n\nRecibirás una confirmación en ${userEmail}`)
       clearCart()

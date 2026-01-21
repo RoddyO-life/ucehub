@@ -59,10 +59,31 @@ DOCK
 docker build -t ucehub-backend .
 docker stop ucehub-backend 2>/dev/null || true
 docker rm ucehub-backend 2>/dev/null || true
+
+# Get AWS credentials from instance metadata (IMDSv2)
+echo "Getting AWS credentials from instance metadata..."
+TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600" 2>/dev/null)
+# Get the IAM role name dynamically
+IAM_ROLE=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/iam/security-credentials/)
+echo "IAM Role detected: $IAM_ROLE"
+
+# Get credentials using the detected role
+CREDS=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" "http://169.254.169.254/latest/meta-data/iam/security-credentials/$IAM_ROLE")
+export AWS_ACCESS_KEY_ID=$(echo "$CREDS" | grep AccessKeyId | cut -d'"' -f4)
+export AWS_SECRET_ACCESS_KEY=$(echo "$CREDS" | grep SecretAccessKey | cut -d'"' -f4)
+export AWS_SESSION_TOKEN=$(echo "$CREDS" | grep '"Token"' | cut -d'"' -f4)
+
+echo "AWS_ACCESS_KEY_ID obtained"
+echo "AWS_SECRET_ACCESS_KEY obtained"
+echo "AWS_SESSION_TOKEN obtained"
+
 docker run -d --name ucehub-backend --restart unless-stopped \
   -p 127.0.0.1:3001:3001 \
   -e PORT=3001 \
   -e AWS_REGION="$region" \
+  -e AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" \
+  -e AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" \
+  -e AWS_SESSION_TOKEN="$AWS_SESSION_TOKEN" \
   -e CAFETERIA_TABLE="$cafeteria_table" \
   -e SUPPORT_TICKETS_TABLE="$support_table" \
   -e ABSENCE_JUSTIFICATIONS_TABLE="$justifications_table" \
@@ -70,7 +91,7 @@ docker run -d --name ucehub-backend --restart unless-stopped \
   -e TEAMS_WEBHOOK_URL="$teams_webhook_url" \
   ucehub-backend
 
-echo "Backend container started"
+echo "Backend container started with AWS credentials"
 
 # ============================================================================
 # FRONTEND: Download from S3

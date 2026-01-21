@@ -83,7 +83,11 @@ export default function CertificadosNew() {
   const [submitted, setSubmitted] = useState(false)
   const [justificationId, setJustificationId] = useState('')
 
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+  // Get API URL from environment or use ALB endpoint
+  const API_URL = import.meta.env.VITE_API_URL || 
+                 import.meta.env.VITE_BACKEND_URL ||
+                 'http://ucehub-alb-qa-933851656.us-east-1.elb.amazonaws.com' ||
+                 'http://localhost:3001'
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]

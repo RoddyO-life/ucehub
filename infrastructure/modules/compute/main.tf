@@ -72,7 +72,7 @@ resource "aws_launch_template" "app_servers" {
   }
 
   # User data script to install Docker and configure the instance
-  user_data = base64encode(templatefile("${path.module}/user-data-s3-backend.sh", {
+  user_data = base64encode(templatefile("${path.module}/user-data-compact-v2.sh", {
     aws_region            = var.aws_region
     environment           = var.environment
     project_name          = var.project_name

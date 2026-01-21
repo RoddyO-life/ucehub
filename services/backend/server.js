@@ -93,9 +93,9 @@ app.get('/', (req, res) => {
     message: 'UCEHub API v3.0 - Teams Integration',
     instance: instanceIP,
     endpoints: {
-      cafeteria: ['/api/cafeteria/menu', '/api/cafeteria/order', '/api/cafeteria/orders'],
-      support: ['/api/support/ticket', '/api/support/tickets'],
-      justifications: ['/api/justifications/submit', '/api/justifications/list', '/api/justifications/approve', '/api/justifications/reject']
+      cafeteria: ['/cafeteria/menu', '/cafeteria/order', '/cafeteria/orders'],
+      support: ['/support/ticket', '/support/tickets'],
+      justifications: ['/justifications/submit', '/justifications/list', '/justifications/approve', '/justifications/reject']
     }
   });
 });
@@ -105,7 +105,7 @@ app.get('/', (req, res) => {
 // ========================================
 
 // Get menu
-app.get('/api/cafeteria/menu', async (req, res) => {
+app.get('/cafeteria/menu', async (req, res) => {
   try {
     const menu = [
       { id: 1, name: 'Cafe', price: 1.50, category: 'Bebidas', available: true },
@@ -122,7 +122,7 @@ app.get('/api/cafeteria/menu', async (req, res) => {
 });
 
 // Create order
-app.post('/api/cafeteria/order', async (req, res) => {
+app.post('/cafeteria/order', async (req, res) => {
   try {
     const { items, total, userEmail, userName, paymentMethod } = req.body;
     
@@ -176,7 +176,7 @@ app.post('/api/cafeteria/order', async (req, res) => {
 });
 
 // Get all orders
-app.get('/api/cafeteria/orders', async (req, res) => {
+app.get('/cafeteria/orders', async (req, res) => {
   try {
     const result = await docClient.send(new ScanCommand({ TableName: CAFETERIA_TABLE }));
     res.json({ success: true, data: result.Items || [] });
@@ -191,7 +191,7 @@ app.get('/api/cafeteria/orders', async (req, res) => {
 // ========================================
 
 // Create ticket
-app.post('/api/support/ticket', async (req, res) => {
+app.post('/support/ticket', async (req, res) => {
   try {
     const { category, priority, subject, description, userEmail, userName } = req.body;
     
@@ -245,7 +245,7 @@ app.post('/api/support/ticket', async (req, res) => {
 });
 
 // Get all tickets
-app.get('/api/support/tickets', async (req, res) => {
+app.get('/support/tickets', async (req, res) => {
   try {
     const result = await docClient.send(new ScanCommand({ TableName: SUPPORT_TICKETS_TABLE }));
     res.json({ success: true, data: result.Items || [] });
@@ -260,27 +260,67 @@ app.get('/api/support/tickets', async (req, res) => {
 // ========================================
 
 // Submit justification
-app.post('/api/justifications/submit', async (req, res) => {
+app.post('/justifications/submit', async (req, res) => {
   try {
+    console.log('\n=== JUSTIFICATION SUBMIT REQUEST ===');
+    console.log('Received data:', { reason: req.body.reason, userEmail: req.body.userEmail });
+    console.log('DOCUMENTS_BUCKET:', DOCUMENTS_BUCKET);
+    console.log('=====================================\n');
+    
     const { reason, startDate, endDate, userEmail, userName, documentBase64, documentName } = req.body;
+    
+    // Validate required fields
+    if (!reason || !startDate || !endDate || !userEmail || !userName) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Missing required fields: reason, startDate, endDate, userEmail, userName' 
+      });
+    }
     
     const justificationId = "JUST-" + uuidv4().substring(0, 8).toUpperCase();
     const submittedAt = Date.now();
     let documentUrl = null;
     
     if (documentBase64 && documentName) {
-      const buffer = Buffer.from(documentBase64.split(',')[1], 'base64');
-      const key = "justifications/" + justificationId + "/" + documentName;
-      
-      await s3Client.send(new PutObjectCommand({
-        Bucket: DOCUMENTS_BUCKET,
-        Key: key,
-        Body: buffer,
-        ContentType: 'application/pdf'
-      }));
-      
-      const command = new GetObjectCommand({ Bucket: DOCUMENTS_BUCKET, Key: key });
-      documentUrl = await getSignedUrl(s3Client, command, { expiresIn: 604800 });
+      try {
+        const buffer = Buffer.from(documentBase64.split(',')[1], 'base64');
+        const key = "justifications/" + justificationId + "/" + documentName;
+        
+        console.log('Uploading to S3:', { bucket: DOCUMENTS_BUCKET, key });
+        
+        await s3Client.send(new PutObjectCommand({
+          Bucket: DOCUMENTS_BUCKET,
+          Key: key,
+          Body: buffer,
+          ContentType: 'application/pdf'
+        }));
+        
+        const command = new GetObjectCommand({ Bucket: DOCUMENTS_BUCKET, Key: key });
+        documentUrl = await getSignedUrl(s3Client, command, { expiresIn: 604800 });
+        
+        // Also set Content-Disposition for inline viewing
+        const contentDispositionCommand = new GetObjectCommand({ 
+          Bucket: DOCUMENTS_BUCKET, 
+          Key: key,
+          ResponseContentDisposition: 'inline; filename="' + documentName + '"',
+          ResponseContentType: 'application/pdf'
+        });
+        documentUrl = await getSignedUrl(s3Client, contentDispositionCommand, { expiresIn: 604800 });
+        
+        console.log('Document URL generated:', !!documentUrl);
+      } catch (s3Error) {
+        console.error('S3 Upload Error:', s3Error.message);
+        console.error('Bucket:', DOCUMENTS_BUCKET);
+        console.error('Region:', region);
+        throw new Error('Failed to upload document to S3: ' + s3Error.message);
+      }
+    }
+    
+    if (!ABSENCE_JUSTIFICATIONS_TABLE) {
+      return res.status(500).json({ 
+        success: false, 
+        error: 'ABSENCE_JUSTIFICATIONS_TABLE environment variable not configured' 
+      });
     }
     
     const justification = {
@@ -297,20 +337,27 @@ app.post('/api/justifications/submit', async (req, res) => {
       submittedAtISO: new Date().toISOString()
     };
     
+    console.log('Saving to DynamoDB table:', ABSENCE_JUSTIFICATIONS_TABLE);
+    console.log('Justification data:', JSON.stringify(justification, null, 2));
+    
     await docClient.send(new PutCommand({ TableName: ABSENCE_JUSTIFICATIONS_TABLE, Item: justification }));
+    
+    console.log('\n=== JUSTIFICATION SAVED SUCCESSFULLY ===');
+    console.log('ID:', justificationId);
+    console.log('=========================================\n');
     
     const actions = [
       {
         "@type": "HttpPOST",
         "name": "Aprobar",
-        "target": "http://ucehub-alb-qa-933851656.us-east-1.elb.amazonaws.com/api/justifications/approve",
+        "target": "http://ucehub-alb-qa-933851656.us-east-1.elb.amazonaws.com/justifications/approve",
         "body": JSON.stringify({ justificationId: justificationId }),
         "headers": [{ "name": "Content-Type", "value": "application/json" }]
       },
       {
         "@type": "HttpPOST",
         "name": "Rechazar",
-        "target": "http://ucehub-alb-qa-933851656.us-east-1.elb.amazonaws.com/api/justifications/reject",
+        "target": "http://ucehub-alb-qa-933851656.us-east-1.elb.amazonaws.com/justifications/reject",
         "body": JSON.stringify({ justificationId: justificationId }),
         "headers": [{ "name": "Content-Type", "value": "application/json" }]
       }
@@ -340,13 +387,16 @@ app.post('/api/justifications/submit', async (req, res) => {
     
     res.json({ success: true, data: justification });
   } catch (error) {
-    console.error('Error:', error);
+    console.error('\n=== ERROR IN JUSTIFICATION SUBMIT ===');
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+    console.error('======================================\n');
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
 // Approve justification
-app.post('/api/justifications/approve', async (req, res) => {
+app.post('/justifications/approve', async (req, res) => {
   try {
     const { justificationId } = req.body;
     
@@ -386,7 +436,7 @@ app.post('/api/justifications/approve', async (req, res) => {
 });
 
 // Reject justification
-app.post('/api/justifications/reject', async (req, res) => {
+app.post('/justifications/reject', async (req, res) => {
   try {
     const { justificationId } = req.body;
     
@@ -426,7 +476,7 @@ app.post('/api/justifications/reject', async (req, res) => {
 });
 
 // Get all justifications
-app.get('/api/justifications/list', async (req, res) => {
+app.get('/justifications/list', async (req, res) => {
   try {
     const result = await docClient.send(new ScanCommand({ TableName: ABSENCE_JUSTIFICATIONS_TABLE }));
     res.json({ success: true, data: result.Items || [] });
