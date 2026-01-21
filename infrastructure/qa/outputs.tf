@@ -40,13 +40,13 @@ output "nat_instance_ip" {
 output "infrastructure_summary" {
   description = "Resumen de la infraestructura creada"
   value = {
-    vpc_id                    = module.vpc.vpc_id
-    availability_zones        = var.availability_zones
-    public_subnets_count      = length(module.vpc.public_subnet_ids)
-    private_app_subnets_count = length(module.vpc.private_app_subnet_ids)
+    vpc_id                     = module.vpc.vpc_id
+    availability_zones         = var.availability_zones
+    public_subnets_count       = length(module.vpc.public_subnet_ids)
+    private_app_subnets_count  = length(module.vpc.private_app_subnet_ids)
     private_data_subnets_count = length(module.vpc.private_data_subnet_ids)
-    nat_type                  = "NAT Instance (t3.nano)"
-    estimated_cost_monthly    = "$3.50 (NAT) + $0 (VPC/Subnets)"
+    nat_type                   = "NAT Instance (t3.nano)"
+    estimated_cost_monthly     = "$3.50 (NAT) + $0 (VPC/Subnets)"
   }
 }
 
@@ -125,27 +125,27 @@ output "infrastructure_complete_summary" {
   description = "Resumen completo de toda la infraestructura"
   value = {
     # VPC
-    vpc_id = module.vpc.vpc_id
+    vpc_id             = module.vpc.vpc_id
     availability_zones = var.availability_zones
-    
+
     # Networking
     public_subnets  = module.vpc.public_subnet_ids
     private_subnets = module.vpc.private_app_subnet_ids
     nat_instance_id = module.vpc.nat_instance_id
-    
+
     # Security
     alb_sg_id = module.security_groups.alb_security_group_id
     ec2_sg_id = module.security_groups.ec2_security_group_id
-    
+
     # Load Balancer
     alb_url = module.load_balancer.load_balancer_url
-    
+
     # Compute
     asg_name      = module.compute.autoscaling_group_name
     instance_type = module.compute.compute_summary.instance_type
     min_instances = module.compute.compute_summary.min_instances
     max_instances = module.compute.compute_summary.max_instances
-    
+
     # Cost estimate
     estimated_monthly_cost = "$3.50 (NAT) + ~$15-30 (EC2) + ~$16 (ALB) = ~$35-50/month"
   }

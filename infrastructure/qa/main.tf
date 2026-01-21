@@ -39,8 +39,8 @@ module "vpc" {
   private_app_subnets_cidr  = var.private_app_subnets_cidr
   private_data_subnets_cidr = var.private_data_subnets_cidr
 
-  enable_nat_gateway  = true   # Using NAT Gateway for reliable connectivity
-  enable_nat_instance = false  # Disabled NAT Instance
+  enable_nat_gateway  = true  # Using NAT Gateway for reliable connectivity
+  enable_nat_instance = false # Disabled NAT Instance
   nat_instance_type   = "t3.nano"
 
   tags = var.tags
@@ -57,7 +57,7 @@ module "security_groups" {
   environment  = var.environment
   vpc_id       = module.vpc.vpc_id
 
-  enable_bastion       = false  # Disabled for QA to save costs
+  enable_bastion       = false # Disabled for QA to save costs
   bastion_allowed_cidr = "0.0.0.0/0"
 
   common_tags = var.tags
@@ -77,11 +77,11 @@ module "load_balancer" {
   public_subnet_ids     = module.vpc.public_subnet_ids
   alb_security_group_id = module.security_groups.alb_security_group_id
 
-  health_check_path   = "/"
-  enable_stickiness   = false
-  enable_https        = false  # No SSL certificate for QA
-  
-  enable_deletion_protection = false  # Allow easy cleanup in QA
+  health_check_path = "/"
+  enable_stickiness = false
+  enable_https      = false # No SSL certificate for QA
+
+  enable_deletion_protection = false # Allow easy cleanup in QA
 
   common_tags = var.tags
 }
@@ -104,9 +104,9 @@ module "compute" {
   teams_webhook_url  = var.teams_webhook_url
 
   # Instance configuration
-  instance_type             = "t3.nano"  # Smaller instance for easier CPU saturation
-  root_volume_size          = 30  # Minimum required by Amazon Linux 2023 AMI
-  enable_detailed_monitoring = false  # Save costs in QA
+  instance_type              = "t3.nano" # Smaller instance for easier CPU saturation
+  root_volume_size           = 30        # Minimum required by Amazon Linux 2023 AMI
+  enable_detailed_monitoring = false     # Save costs in QA
 
   # Auto Scaling configuration
   min_instances     = 1
@@ -116,30 +116,30 @@ module "compute" {
   health_check_grace_period = 300
 
   # Scaling policies
-  cpu_high_threshold      = 70
-  cpu_low_threshold       = 20
-  enable_target_tracking  = true
-  target_cpu_utilization  = 50
+  cpu_high_threshold     = 70
+  cpu_low_threshold      = 20
+  enable_target_tracking = true
+  target_cpu_utilization = 50
 
   # Application configuration
-  docker_image   = "nginx:alpine"  # Placeholder - update with your Docker image
+  docker_image   = "nginx:alpine" # Placeholder - update with your Docker image
   container_port = 80
 
   app_environment_variables = {
-    NODE_ENV                   = var.environment
-    PROJECT_NAME              = var.project_name
-    LOG_LEVEL                 = "info"
-    CAFETERIA_TABLE           = module.dynamodb.cafeteria_orders_table_name
-    SUPPORT_TICKETS_TABLE     = module.dynamodb.support_tickets_table_name
+    NODE_ENV                     = var.environment
+    PROJECT_NAME                 = var.project_name
+    LOG_LEVEL                    = "info"
+    CAFETERIA_TABLE              = module.dynamodb.cafeteria_orders_table_name
+    SUPPORT_TICKETS_TABLE        = module.dynamodb.support_tickets_table_name
     ABSENCE_JUSTIFICATIONS_TABLE = module.dynamodb.absence_justifications_table_name
-    DOCUMENTS_BUCKET          = module.s3.documents_bucket_name
-    NOTIFICATION_EMAIL        = "rjortega@uce.edu.ec"
-    TEAMS_WEBHOOK_URL         = var.teams_webhook_url
+    DOCUMENTS_BUCKET             = module.s3.documents_bucket_name
+    NOTIFICATION_EMAIL           = "rjortega@uce.edu.ec"
+    TEAMS_WEBHOOK_URL            = var.teams_webhook_url
   }
 
   # SSH access (disabled for QA to follow security best practices)
   create_key_pair = false
-  
+
   # ECR access (enable if using AWS ECR for Docker images)
   enable_ecr_access = false
 

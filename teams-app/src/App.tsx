@@ -6,10 +6,11 @@ import Home from './pages/Home'
 import Auth from './pages/Auth'
 import CertificadosNew from './pages/CertificadosNew'
 import Biblioteca from './pages/Biblioteca'
-import SoporteNew from './pages/SoporteNew'
+import Support from './pages/Support'
+import Justifications from './pages/Justifications'
 import Becas from './pages/Becas'
 import Horarios from './pages/Horarios'
-import CafeteriaNew from './pages/CafeteriaNew'
+import CafeteriaProNew from './pages/CafeteriaProNew'
 import './App.css'
 
 function App() {
@@ -51,10 +52,11 @@ function App() {
           <Route path="/auth" element={<Auth />} />
           <Route path="/certificados" element={<CertificadosNew />} />
           <Route path="/biblioteca" element={<Biblioteca />} />
-          <Route path="/soporte" element={<SoporteNew />} />
+          <Route path="/support" element={<Support />} />
+          <Route path="/justifications" element={<Justifications />} />
           <Route path="/becas" element={<Becas />} />
           <Route path="/horarios" element={<Horarios />} />
-          <Route path="/cafeteria" element={<CafeteriaNew />} />
+          <Route path="/cafeteria" element={<CafeteriaProNew />} />
         </Routes>
       </Router>
     </FluentProvider>
