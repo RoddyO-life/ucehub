@@ -1,12 +1,15 @@
 import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   makeStyles,
+  shorthands,
   Button,
   Spinner,
 } from '@fluentui/react-components'
 import {
   CheckmarkCircleRegular,
   AlertRegular,
+  ArrowLeftRegular,
 } from '@fluentui/react-icons'
 import axios from 'axios'
 
@@ -25,27 +28,33 @@ const useStyles = makeStyles({
     gap: '24px',
     padding: '24px',
     minHeight: '100vh',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    background: 'transparent',
   },
   header: {
     color: '#ffffff',
     marginBottom: '16px',
+    textAlign: 'center',
   },
   headerTitle: {
-    fontSize: '28px',
-    fontWeight: '700',
+    fontSize: '32px',
+    fontWeight: '800',
     marginBottom: '8px',
+    background: 'linear-gradient(135deg, #FFB800 0%, #FF6B00 100%)',
+    '-webkit-background-clip': 'text',
+    '-webkit-text-fill-color': 'transparent',
   },
   headerSubtitle: {
-    fontSize: '14px',
+    fontSize: '16px',
     opacity: '0.9',
+    color: '#aaa',
   },
   card: {
-    background: 'rgba(255, 255, 255, 0.95)',
-    backdropFilter: 'blur(10px)',
-    borderRadius: '12px',
+    background: 'rgba(20, 20, 20, 0.6)',
+    backdropFilter: 'blur(16px)',
+    borderRadius: '16px',
     padding: '24px',
-    border: '1px solid rgba(255, 255, 255, 0.3)',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
   },
   form: {
     display: 'flex',
@@ -60,54 +69,71 @@ const useStyles = makeStyles({
   },
   label: {
     fontWeight: '600',
-    color: '#333333',
+    color: '#FFB800',
     fontSize: '14px',
   },
   input: {
-    padding: '10px',
-    border: '1px solid #e0e0e0',
-    borderRadius: '6px',
+    padding: '12px',
+    background: 'rgba(255, 255, 255, 0.05)',
+    ...shorthands.border('1px', 'solid', 'rgba(255, 255, 255, 0.1)'),
+    ...shorthands.borderRadius('8px'),
     fontSize: '14px',
+    color: '#fff',
     fontFamily: 'inherit',
-    ':focus': {
+    transition: 'all 0.3s ease',
+    '&:focus': {
       outline: 'none',
+      ...shorthands.borderColor('#FFB800'),
+      background: 'rgba(255, 255, 255, 0.08)',
     },
   },
   textarea: {
-    padding: '10px',
-    border: '1px solid #e0e0e0',
-    borderRadius: '6px',
+    padding: '12px',
+    background: 'rgba(255, 255, 255, 0.05)',
+    ...shorthands.border('1px', 'solid', 'rgba(255, 255, 255, 0.1)'),
+    ...shorthands.borderRadius('8px'),
     fontSize: '14px',
+    color: '#fff',
     fontFamily: 'inherit',
     minHeight: '120px',
     resize: 'vertical',
+    transition: 'all 0.3s ease',
+    '&:focus': {
+      outline: 'none',
+      ...shorthands.borderColor('#FFB800'),
+    },
   },
   select: {
-    padding: '10px',
-    border: '1px solid #e0e0e0',
-    borderRadius: '6px',
+    padding: '12px',
+    background: 'rgba(0, 0, 0, 0.3)',
+    ...shorthands.border('1px', 'solid', 'rgba(255, 255, 255, 0.1)'),
+    ...shorthands.borderRadius('8px'),
     fontSize: '14px',
+    color: '#fff',
     fontFamily: 'inherit',
-    ':focus': {
+    '&:focus': {
       outline: 'none',
+      ...shorthands.borderColor('#FFB800'),
     },
   },
   submitButton: {
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    color: '#ffffff',
-    border: 'none',
-    padding: '12px 28px',
-    borderRadius: '6px',
-    fontWeight: '600',
-    fontSize: '14px',
+    background: 'linear-gradient(135deg, #FF9E00 0%, #FF6B00 100%)',
+    color: '#000',
+    ...shorthands.border('none'),
+    ...shorthands.padding('14px', '28px'),
+    ...shorthands.borderRadius('8px'),
+    fontWeight: '700',
+    fontSize: '15px',
     cursor: 'pointer',
     transition: 'all 0.3s ease',
-    ':hover': {
+    marginTop: '8px',
+    '&:hover': {
       transform: 'translateY(-2px)',
-      boxShadow: '0 12px 24px rgba(102, 126, 234, 0.4)',
+      boxShadow: '0 8px 20px rgba(255, 158, 0, 0.4)',
+      filter: 'brightness(1.1)',
     },
-    ':disabled': {
-      opacity: '0.5',
+    '&:disabled': {
+      opacity: '0.4',
       cursor: 'not-allowed',
     },
   },
@@ -118,16 +144,18 @@ const useStyles = makeStyles({
     marginTop: '16px',
   },
   ticketItem: {
-    background: 'rgba(255, 255, 255, 0.8)',
-    border: '1px solid #e0e0e0',
-    borderRadius: '8px',
-    padding: '16px',
+    background: 'rgba(255, 255, 255, 0.03)',
+    ...shorthands.border('1px', 'solid', 'rgba(255, 255, 255, 0.05)'),
+    ...shorthands.borderRadius('12px'),
+    ...shorthands.padding('16px'),
     display: 'flex',
     flexDirection: 'column',
     gap: '12px',
-    transition: 'all 0.2s',
-    ':hover': {
-      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+    transition: 'all 0.3s ease',
+    '&:hover': {
+      background: 'rgba(255, 255, 255, 0.06)',
+      ...shorthands.borderColor('rgba(255, 184, 0, 0.3)'),
+      transform: 'translateX(5px)',
     },
   },
   ticketHeader: {
@@ -138,19 +166,19 @@ const useStyles = makeStyles({
   ticketNumber: {
     fontSize: '12px',
     fontWeight: '600',
-    color: '#666666',
-    background: '#f0f4ff',
+    color: '#FFB800',
+    background: 'rgba(255, 184, 0, 0.1)',
     padding: '4px 12px',
-    borderRadius: '4px',
+    borderRadius: '6px',
   },
   ticketTitle: {
     fontSize: '16px',
     fontWeight: '700',
-    color: '#333333',
+    color: '#ffffff',
   },
   ticketDescription: {
     fontSize: '14px',
-    color: '#666666',
+    color: '#ccc',
     lineHeight: '1.5',
   },
   ticketFooter: {
@@ -159,55 +187,62 @@ const useStyles = makeStyles({
     alignItems: 'center',
     flexWrap: 'wrap',
     gap: '12px',
+    paddingTop: '8px',
+    borderTop: '1px solid rgba(255, 255, 255, 0.05)',
   },
   statusBadge: {
     padding: '4px 12px',
     borderRadius: '12px',
     fontSize: '12px',
-    fontWeight: '600',
+    fontWeight: '700',
+    textTransform: 'uppercase',
   },
   statusOpen: {
-    background: '#e7f3ff',
-    color: '#004b7a',
+    background: 'rgba(255, 184, 0, 0.1)',
+    color: '#FFB800',
   },
   statusInProgress: {
-    background: '#fff4ce',
-    color: '#b86f00',
+    background: 'rgba(0, 158, 255, 0.1)',
+    color: '#009EFF',
   },
   statusResolved: {
-    background: '#dcf5dd',
-    color: '#107c10',
+    background: 'rgba(0, 255, 136, 0.1)',
+    color: '#00FF88',
   },
   statusClosed: {
-    background: '#f0f0f0',
-    color: '#666666',
+    background: 'rgba(255, 255, 255, 0.1)',
+    color: '#888',
   },
   priorityBadge: {
     padding: '4px 12px',
     borderRadius: '12px',
-    fontSize: '12px',
-    fontWeight: '600',
+    fontSize: '11px',
+    fontWeight: '700',
   },
   priorityLow: {
-    background: '#e7f3ff',
-    color: '#004b7a',
+    background: 'rgba(255, 255, 255, 0.05)',
+    color: '#888',
   },
   priorityMedium: {
-    background: '#fff4ce',
-    color: '#b86f00',
+    background: 'rgba(255, 184, 0, 0.1)',
+    color: '#FFB800',
   },
   priorityHigh: {
-    background: '#fed4d4',
-    color: '#a4373a',
+    background: 'rgba(255, 59, 48, 0.1)',
+    color: '#FF3B30',
   },
   emptyState: {
     textAlign: 'center',
     padding: '40px 20px',
+    background: 'rgba(255, 255, 255, 0.02)',
+    borderRadius: '16px',
+    border: '1px dashed rgba(255, 255, 255, 0.1)',
   },
   emptyIcon: {
     fontSize: '48px',
     marginBottom: '16px',
     opacity: '0.5',
+    color: '#FFB800',
   },
   statsGrid: {
     display: 'grid',
@@ -216,21 +251,51 @@ const useStyles = makeStyles({
     marginTop: '16px',
   },
   statBox: {
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    background: 'rgba(255, 184, 0, 0.05)',
+    ...shorthands.border('1px', 'solid', 'rgba(255, 184, 0, 0.1)'),
     color: '#ffffff',
-    borderRadius: '8px',
-    padding: '16px',
+    ...shorthands.borderRadius('12px'),
+    ...shorthands.padding('16px'),
     textAlign: 'center',
+    transition: 'all 0.3s ease',
+    '&:hover': {
+        background: 'rgba(255, 184, 0, 0.1)',
+        ...shorthands.borderColor('#FFB800'),
+    }
   },
   statValue: {
-    fontSize: '24px',
-    fontWeight: '700',
+    fontSize: '28px',
+    fontWeight: '800',
+    color: '#FFB800',
   },
   statLabel: {
     fontSize: '12px',
     opacity: '0.9',
     marginTop: '4px',
+    color: '#aaa',
+    textTransform: 'uppercase',
+    letterSpacing: '1px',
   },
+  backButton: {
+    background: 'rgba(255, 255, 255, 0.05)',
+    ...shorthands.border('1px', 'solid', 'rgba(255, 255, 255, 0.1)'),
+    color: '#fff',
+    ...shorthands.padding('10px', '20px'),
+    ...shorthands.borderRadius('12px'),
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: '600',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    transition: 'all 0.3s ease',
+    marginBottom: '20px',
+    '&:hover': {
+      background: 'rgba(255, 255, 255, 0.1)',
+      ...shorthands.borderColor('#FFB800'),
+      transform: 'translateX(-5px)',
+    }
+  }
 })
 
 interface Ticket {
@@ -247,6 +312,7 @@ interface Ticket {
 
 export const Support: React.FC = () => {
   const styles = useStyles()
+  const navigate = useNavigate()
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [category, setCategory] = useState('technical')
@@ -286,26 +352,36 @@ export const Support: React.FC = () => {
     }
 
     setLoading(true)
+    setError('')
     try {
-      const apiUrl = import.meta.env.VITE_API_URL
-      await axios.post(`${apiUrl}/support/ticket`, {
-        title,
-        description,
-        category,
-        priority,
-        userEmail: 'user@ucehub.edu.ec',
-        userName: 'Estudiante'
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+      const response = await axios.post(`${apiUrl}/support/ticket`, {
+        title: title.trim(),
+        description: description.trim(),
+        category: category || 'general',
+        priority: priority || 'medium',
+        userEmail: 'estudiante@ucehub.edu.ec',
+        userName: 'Estudiante UCE',
+        subject: title.trim()
+      }, {
+        headers: { 'Content-Type': 'application/json' }
       })
 
+      console.log('Ticket created:', response.data)
       setSuccess(true)
       setTitle('')
       setDescription('')
       setCategory('technical')
       setPriority('medium')
       
-      setTimeout(() => setSuccess(false), 3000)
+      setTimeout(() => {
+        setSuccess(false)
+        // Reload tickets list
+        window.location.reload()
+      }, 2000)
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Error al crear ticket.')
+      console.error('Submit error:', err)
+      setError(err.response?.data?.message || 'Error al crear el ticket.')
     } finally {
       setLoading(false)
     }
@@ -369,11 +445,15 @@ export const Support: React.FC = () => {
 
   return (
     <div className={styles.container}>
+      <button className={styles.backButton} onClick={() => navigate('/')}>
+        <ArrowLeftRegular /> Volver al Inicio
+      </button>
+
       {/* Header */}
       <div className={styles.header}>
-        <div className={styles.headerTitle}>🎫 Centro de Soporte</div>
+        <div className={styles.headerTitle}>Centro de Soporte</div>
         <div className={styles.headerSubtitle}>
-          Crea tickets para reportar problemas o hacer consultas
+          Estamos aquí para ayudarte 24/7 con cualquier problema técnico o académico.
         </div>
       </div>
 

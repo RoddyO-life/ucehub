@@ -76,11 +76,11 @@ module "load_balancer" {
   environment  = var.environment
   vpc_id       = module.vpc.vpc_id
 
-  public_subnet_ids   = module.vpc.public_subnet_ids
-  security_group_id   = module.security_groups.alb_security_group_id
-  health_check_path   = "/"
-  enable_stickiness   = false
-  enable_https        = false  # Enable in production with SSL certificate
+  public_subnet_ids         = module.vpc.public_subnet_ids
+  alb_security_group_id     = module.security_groups.alb_security_group_id
+  health_check_path         = "/"
+  enable_stickiness         = false
+  enable_https              = false  # Enable in production with SSL certificate
   
   enable_deletion_protection = true  # Protected in production
 
@@ -135,7 +135,10 @@ module "compute" {
     ABSENCE_JUSTIFICATIONS_TABLE = module.dynamodb.absence_justifications_table_name
     DOCUMENTS_BUCKET             = module.s3.documents_bucket_name
     TEAMS_WEBHOOK_URL            = var.teams_webhook_url
+    REDIS_ENDPOINT               = module.cache.redis_endpoint
   }
+
+  s3_backend_bucket = "ucehub-backend-prod-code"
 
   # SSH access (disabled for production)
   create_key_pair = false
@@ -174,6 +177,21 @@ module "s3" {
 
   project_name = var.project_name
   environment  = var.environment
+
+  common_tags = var.tags
+}
+
+# ========================================
+# Cache Module (Redis)
+# ========================================
+module "cache" {
+  source = "../modules/cache"
+
+  project_name = var.project_name
+  environment  = var.environment
+  vpc_id       = module.vpc.vpc_id
+  private_data_subnet_ids = module.vpc.private_data_subnet_ids
+  ec2_security_group_id  = module.security_groups.ec2_security_group_id
 
   common_tags = var.tags
 }

@@ -9,13 +9,12 @@ import Biblioteca from './pages/Biblioteca'
 import Support from './pages/Support'
 import Justifications from './pages/Justifications'
 import Becas from './pages/Becas'
-import Horarios from './pages/Horarios'
 import CafeteriaProNew from './pages/CafeteriaProNew'
 import './App.css'
 
 function App() {
   const [teamsContext, setTeamsContext] = useState<any>(null)
-  const [theme, setTheme] = useState(webLightTheme)
+  const [theme, setTheme] = useState(webDarkTheme) // Default to dark for Velocity look
   const [isInTeams, setIsInTeams] = useState(false)
 
   useEffect(() => {
@@ -55,7 +54,6 @@ function App() {
           <Route path="/support" element={<Support />} />
           <Route path="/justifications" element={<Justifications />} />
           <Route path="/becas" element={<Becas />} />
-          <Route path="/horarios" element={<Horarios />} />
           <Route path="/cafeteria" element={<CafeteriaProNew />} />
         </Routes>
       </Router>

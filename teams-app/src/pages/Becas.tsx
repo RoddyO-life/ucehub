@@ -2,11 +2,8 @@ import { useState } from 'react'
 import {
   makeStyles,
   Button,
-  Card,
-  Title2,
   Title3,
   Body1,
-  tokens,
   Spinner,
   Badge,
   ProgressBar,
@@ -14,53 +11,125 @@ import {
 import {
   CheckmarkCircleRegular,
   ArrowUploadRegular,
-  DocumentRegular
+  DocumentRegular,
+  ArrowLeftRegular,
+  StarRegular,
 } from '@fluentui/react-icons'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 
 const useStyles = makeStyles({
   container: {
-    padding: '20px',
-    maxWidth: '1000px',
+    padding: '24px',
+    backgroundColor: 'transparent',
+    minHeight: '100vh',
+    maxWidth: '1200px',
     margin: '0 auto',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '24px',
   },
   header: {
-    marginBottom: '30px',
+    textAlign: 'center',
+    padding: '40px',
+    backgroundColor: 'rgba(20, 20, 20, 0.4)',
+    backdropFilter: 'blur(10px)',
+    borderRadius: '16px',
+    border: '1px solid rgba(255, 255, 255, 0.05)',
+    marginBottom: '24px',
+  },
+  headerTitle: {
+    fontSize: '32px',
+    fontWeight: '800',
+    background: 'linear-gradient(135deg, #FFB800 0%, #FF6B00 100%)',
+    '-webkit-background-clip': 'text',
+    '-webkit-text-fill-color': 'transparent',
     display: 'flex',
     alignItems: 'center',
-    gap: '15px',
+    justifyContent: 'center',
+    gap: '12px',
   },
-  icon: {
-    fontSize: '40px',
-    color: tokens.colorBrandForeground1,
+  headerSubtitle: {
+    color: '#aaa',
+    fontSize: '16px',
+    marginTop: '8px',
   },
   grid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-    gap: '20px',
-    marginTop: '20px',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))',
+    gap: '24px',
   },
   card: {
-    padding: '20px',
+    padding: '28px',
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    border: '1px solid rgba(255, 255, 255, 0.05)',
+    borderRadius: '16px',
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '16px',
+    '&:hover': {
+      backgroundColor: 'rgba(255, 255, 255, 0.06)',
+      borderColor: 'rgba(255, 184, 0, 0.3)',
+      transform: 'translateY(-4px)',
+    }
   },
   becaInfo: {
     display: 'flex',
     flexDirection: 'column',
     gap: '12px',
+    flex: 1,
   },
   requisitos: {
-    listStyle: 'disc',
-    paddingLeft: '20px',
-    marginTop: '5px',
+    listStyle: 'none',
+    paddingLeft: '0',
+    marginTop: '10px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+  },
+  requisitoItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    color: '#ccc',
+    fontSize: '13px',
   },
   actions: {
-    display: 'flex',
-    gap: '10px',
-    marginTop: '15px',
+    marginTop: 'auto',
+    paddingTop: '20px',
+  },
+  applyButton: {
+    background: 'linear-gradient(135deg, #FFB800 0%, #FF6B00 100%)',
+    color: '#000',
+    fontWeight: '700',
+    borderRadius: '10px',
+    border: 'none',
+    width: '100%',
+    padding: '12px',
+    '&:hover': {
+      boxShadow: '0 0 15px rgba(255, 184, 0, 0.3)',
+    }
   },
   backButton: {
-    marginBottom: '20px',
+    background: 'rgba(255, 255, 255, 0.05)',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
+    color: '#fff',
+    padding: '10px 20px',
+    borderRadius: '12px',
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: '600',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    transition: 'all 0.3s ease',
+    alignSelf: 'flex-start',
+    '&:hover': {
+      background: 'rgba(255, 255, 255, 0.1)',
+      borderColor: '#FFB800',
+      transform: 'translateX(-5px)',
+    }
   },
 })
 
@@ -132,71 +201,89 @@ const Becas = () => {
 
   return (
     <div className={styles.container}>
-      <Button 
-        className={styles.backButton}
-        onClick={() => navigate('/')}
-      >
-        ← Volver
-      </Button>
+      <button className={styles.backButton} onClick={() => navigate('/')}>
+        <ArrowLeftRegular /> Volver al Inicio
+      </button>
 
       <div className={styles.header}>
-        <CheckmarkCircleRegular className={styles.icon} />
-        <div>
-          <Title2>Becas Universitarias</Title2>
-          <Body1>Solicita becas y apoyos económicos para tus estudios</Body1>
-        </div>
+        <h1 className={styles.headerTitle}>
+          <StarRegular style={{ color: '#FFB800' }} /> Programa de Becas UCE
+        </h1>
+        <p className={styles.headerSubtitle}>Apoyamos tu excelencia académica y compromiso con el futuro</p>
       </div>
 
       {message && (
-        <Card style={{ marginBottom: '20px', padding: '15px', backgroundColor: tokens.colorPaletteGreenBackground2 }}>
-          <Body1>{message}</Body1>
-        </Card>
+        <div style={{ 
+            padding: '16px', 
+            borderRadius: '12px', 
+            backgroundColor: 'rgba(0, 183, 117, 0.1)', 
+            border: '1px solid rgba(0, 183, 117, 0.2)',
+            color: '#00B775',
+            textAlign: 'center',
+            marginBottom: '20px'
+        }}>
+          {message}
+        </div>
       )}
 
       <div className={styles.grid}>
         {becas.map((beca) => (
-          <Card key={beca.id} className={styles.card}>
+          <div key={beca.id} className={styles.card}>
             <div className={styles.becaInfo}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Title3>{beca.nombre}</Title3>
-                <Badge size="large" color="informative">{beca.monto}</Badge>
+                <Title3 style={{ color: '#fff', fontWeight: '800' }}>{beca.nombre}</Title3>
+                <Badge size="large" appearance="filled" style={{ background: '#FFB800', color: '#000' }}>{beca.monto}</Badge>
               </div>
               
-              <Body1>{beca.descripcion}</Body1>
+              <Body1 style={{ color: '#aaa', lineHeight: '1.4' }}>{beca.descripcion}</Body1>
               
-              <div>
-                <Body1><strong>Requisitos:</strong></Body1>
+              <div style={{ marginTop: '10px' }}>
+                <Body1 style={{ color: '#fff', fontWeight: 'bold', fontSize: '13px' }}>Requisitos:</Body1>
                 <ul className={styles.requisitos}>
                   {beca.requisitos.map((req, idx) => (
-                    <li key={idx}><Body1>{req}</Body1></li>
+                    <li key={idx} className={styles.requisitoItem}>
+                        <CheckmarkCircleRegular style={{ color: '#FFB800', fontSize: '14px' }} />
+                        <span>{req}</span>
+                    </li>
                   ))}
                 </ul>
               </div>
 
-              <div>
-                <Body1><strong>Cupos disponibles: {beca.cupos}</strong></Body1>
-                <ProgressBar value={beca.cupos / 50} style={{ marginTop: '5px' }} />
+              <div style={{ marginTop: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <Body1 style={{ color: '#888', fontSize: '12px' }}>Cupos disponibles</Body1>
+                    <Body1 style={{ color: '#FFB800', fontSize: '12px', fontWeight: 'bold' }}>{beca.cupos} de 50</Body1>
+                </div>
+                <ProgressBar 
+                    value={beca.cupos / 50} 
+                    style={{ height: '6px', borderRadius: '3px' }} 
+                    color={beca.cupos > 20 ? 'success' : 'warning'}
+                />
               </div>
 
-              <Badge 
-                color={beca.disponible ? 'success' : 'warning'}
-                icon={beca.disponible ? <CheckmarkCircleRegular /> : <DocumentRegular />}
-              >
-                {beca.disponible ? 'Convocatoria abierta' : 'Convocatoria cerrada'}
-              </Badge>
+              <div style={{ marginTop: '16px' }}>
+                <Badge 
+                    appearance="outline"
+                    color={beca.disponible ? 'success' : 'warning'}
+                    icon={beca.disponible ? <CheckmarkCircleRegular /> : <DocumentRegular />}
+                    style={{ padding: '6px 12px' }}
+                >
+                    {beca.disponible ? 'Convocatoria Abierta' : 'Convocatoria Cerrada'}
+                </Badge>
+              </div>
 
               <div className={styles.actions}>
                 <Button
-                  appearance="primary"
+                  className={styles.applyButton}
                   icon={<ArrowUploadRegular />}
                   onClick={() => handleSolicitar(beca)}
                   disabled={loading || !beca.disponible}
                 >
-                  {loading ? <Spinner size="tiny" /> : 'Solicitar'}
+                  {loading ? <Spinner size="tiny" /> : 'Solicitar Ahora'}
                 </Button>
               </div>
             </div>
-          </Card>
+          </div>
         ))}
       </div>
     </div>

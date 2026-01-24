@@ -47,6 +47,10 @@ resource "aws_dynamodb_table" "cafeteria_orders" {
     projection_type = "ALL"
   }
 
+  point_in_time_recovery {
+    enabled = true
+  }
+
   ttl {
     attribute_name = "expirationTime"
     enabled        = true
@@ -120,6 +124,10 @@ resource "aws_dynamodb_table" "support_tickets" {
     projection_type = "ALL"
   }
 
+  point_in_time_recovery {
+    enabled = true
+  }
+
   tags = merge(
     var.common_tags,
     {
@@ -173,6 +181,10 @@ resource "aws_dynamodb_table" "absence_justifications" {
     hash_key        = "status"
     range_key       = "submittedAt"
     projection_type = "ALL"
+  }
+
+  point_in_time_recovery {
+    enabled = true
   }
 
   tags = merge(

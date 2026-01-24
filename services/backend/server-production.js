@@ -6,9 +6,51 @@ const { S3Client, PutObjectCommand, GetObjectCommand } = require('@aws-sdk/clien
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const { v4: uuidv4 } = require('uuid');
 const axios = require('axios');
+const Redis = require('ioredis');
+const { swaggerUi, specs } = require('./swagger');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+// Redis Configuration
+const REDIS_ENDPOINT = process.env.REDIS_ENDPOINT || '';
+let redis;
+
+if (REDIS_ENDPOINT) {
+  try {
+    redis = new Redis(REDIS_ENDPOINT, {
+      maxRetriesPerRequest: 1,
+      connectTimeout: 5000,
+    });
+    redis.on('error', (err) => console.error('[Redis] Connection Error:', err.message));
+    redis.on('connect', () => console.log('[Redis] Connected to cluster:', REDIS_ENDPOINT));
+  } catch (err) {
+    console.error('[Redis] Failed to initialize:', err.message);
+  }
+}
+
+// Caching Helper
+async function getCachedData(key) {
+  if (!redis) return null;
+  try {
+    const cached = await redis.get(key);
+    return cached ? JSON.parse(cached) : null;
+  } catch (error) {
+    console.error(`[Redis] Error getting key ${key}:`, error.message);
+    return null;
+  }
+}
+
+async function setCachedData(key, data, ttl = 300) {
+  if (!redis) return false;
+  try {
+    await redis.set(key, JSON.stringify(data), 'EX', ttl);
+    return true;
+  } catch (error) {
+    console.error(`[Redis] Error setting key ${key}:`, error.message);
+    return false;
+  }
+}
 
 // Middleware - IMPORTANTE: límite alto para archivos
 app.use(cors({
@@ -18,6 +60,25 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+// Swagger Documentation with Custom CSP for Styles/Scripts
+const swaggerOptions = {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: "UCEHub API Documentation",
+};
+
+app.use(['/api/api-docs', '/api-docs'], swaggerUi.serve);
+app.get(['/api/api-docs', '/api-docs'], (req, res, next) => {
+  // Disable CSP for Swagger UI to allow inline styles/scripts required by the UI
+  res.setHeader("Content-Security-Policy", "default-src * 'unsafe-inline' 'unsafe-eval'; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline';");
+  next();
+}, swaggerUi.setup(specs, swaggerOptions));
+
+// Logger
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  next();
+});
 
 // AWS Configuration
 const region = process.env.AWS_REGION || 'us-east-1';
@@ -130,7 +191,25 @@ app.get('/', (req, res) => {
 // CAFETERIA ENDPOINTS
 // ========================================
 
-// Get menu
+/**
+ * @openapi
+ * /cafeteria/menu:
+ *   get:
+ *     summary: Obtiene el menú disponible en la cafetería
+ *     tags: [Cafeteria]
+ *     responses:
+ *       200:
+ *         description: Menú obtenido exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ */
 app.get('/cafeteria/menu', async (req, res) => {
   try {
     const menu = [
@@ -162,7 +241,28 @@ app.get('/cafeteria/menu', async (req, res) => {
   }
 });
 
-// Create order
+/**
+ * @openapi
+ * /cafeteria/order:
+ *   post:
+ *     summary: Crea una nueva orden de comida
+ *     tags: [Cafeteria]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [userName, userEmail, items]
+ *             properties:
+ *               userName: {type: string}
+ *               userEmail: {type: string}
+ *               totalPrice: {type: number}
+ *               items: {type: array, items: {type: object}}
+ *     responses:
+ *       200:
+ *         description: Orden creada exitosamente
+ */
 app.post('/cafeteria/order', async (req, res) => {
   try {
     const { userName, userEmail, items, totalPrice, deliveryTime, notes } = req.body;
@@ -196,6 +296,9 @@ app.post('/cafeteria/order', async (req, res) => {
       TableName: CAFETERIA_TABLE,
       Item: order
     }));
+
+    // Invalidate cache
+    if (redis) await redis.del('cafeteria:orders');
 
     console.log('[Cafeteria] New order:', orderId, 'by', userName);
 
@@ -236,7 +339,21 @@ app.post('/cafeteria/order', async (req, res) => {
 
 // Get orders
 app.get('/cafeteria/orders', async (req, res) => {
+  const cacheKey = 'cafeteria:orders';
   try {
+    // Try cache first
+    const cachedOrders = await getCachedData(cacheKey);
+    if (cachedOrders) {
+      console.log('[Redis] Cache HIT for cafeteria orders');
+      return res.json({
+        success: true,
+        data: cachedOrders,
+        count: cachedOrders.length,
+        instance: instanceIP,
+        source: 'cache'
+      });
+    }
+
     const result = await docClient.send(new ScanCommand({
       TableName: CAFETERIA_TABLE,
       Limit: 100
@@ -246,11 +363,15 @@ app.get('/cafeteria/orders', async (req, res) => {
       new Date(b.createdAt) - new Date(a.createdAt)
     );
 
+    // Save to cache
+    await setCachedData(cacheKey, orders, 60);
+
     res.json({
       success: true,
       data: orders,
       count: orders.length,
-      instance: instanceIP
+      instance: instanceIP,
+      source: 'database'
     });
   } catch (error) {
     console.error('[Cafeteria Orders] Error:', error);
@@ -495,6 +616,102 @@ app.get('/justifications/list', async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error al obtener justificaciones',
+      error: error.message,
+      instance: instanceIP
+    });
+  }
+});
+
+// ========================================
+// DOCUMENT ENDPOINTS
+// ========================================
+
+// Download document
+app.get('/documents/download/:documentId/:fileName', async (req, res) => {
+  try {
+    const { documentId, fileName } = req.params;
+    
+    if (!documentId || !fileName || !DOCUMENTS_BUCKET) {
+      return res.status(400).json({
+        success: false,
+        message: 'Parámetros requeridos faltantes',
+        instance: instanceIP
+      });
+    }
+
+    const documentKey = `justifications/${documentId}/${fileName}`;
+    
+    console.log('[Document] Downloading:', documentKey);
+
+    try {
+      const response = await s3Client.send(new GetObjectCommand({
+        Bucket: DOCUMENTS_BUCKET,
+        Key: documentKey
+      }));
+
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      
+      // Pipe the stream to response
+      response.Body.pipe(res);
+    } catch (s3Error) {
+      console.error('[Document] S3 Error:', s3Error.message);
+      res.status(404).json({
+        success: false,
+        message: 'Documento no encontrado',
+        error: s3Error.message,
+        instance: instanceIP
+      });
+    }
+  } catch (error) {
+    console.error('[Document Download] Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al descargar documento',
+      error: error.message,
+      instance: instanceIP
+    });
+  }
+});
+
+// Get document via presigned URL (already exists, but documented here)
+app.get('/documents/presigned/:documentId/:fileName', async (req, res) => {
+  try {
+    const { documentId, fileName } = req.params;
+    
+    if (!documentId || !fileName || !DOCUMENTS_BUCKET) {
+      return res.status(400).json({
+        success: false,
+        message: 'Parámetros requeridos faltantes',
+        instance: instanceIP
+      });
+    }
+
+    const documentKey = `justifications/${documentId}/${fileName}`;
+    
+    // Generate presigned URL (valid for 1 hour)
+    const presignedUrl = await getSignedUrl(s3Client, new GetObjectCommand({
+      Bucket: DOCUMENTS_BUCKET,
+      Key: documentKey
+    }), { expiresIn: 3600 });
+
+    console.log('[Document] Presigned URL generated:', documentKey);
+
+    res.json({
+      success: true,
+      data: {
+        url: presignedUrl,
+        fileName,
+        expiresIn: 3600
+      },
+      instance: instanceIP
+    });
+  } catch (error) {
+    console.error('[Document Presigned] Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al generar URL presignada',
       error: error.message,
       instance: instanceIP
     });

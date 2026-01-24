@@ -57,8 +57,8 @@ module "security_groups" {
   environment  = var.environment
   vpc_id       = module.vpc.vpc_id
 
-  enable_bastion       = false # Disabled for QA to save costs
-  bastion_allowed_cidr = "0.0.0.0/0"
+  enable_bastion       = true # Enabled for secure admin access
+  bastion_allowed_cidr = "0.0.0.0/0" # Consider restricting this to your specific IP for production
 
   common_tags = var.tags
 }
@@ -135,6 +135,7 @@ module "compute" {
     DOCUMENTS_BUCKET             = module.s3.documents_bucket_name
     NOTIFICATION_EMAIL           = "rjortega@uce.edu.ec"
     TEAMS_WEBHOOK_URL            = var.teams_webhook_url
+    REDIS_ENDPOINT               = module.cache.redis_endpoint
   }
 
   # SSH access (disabled for QA to follow security best practices)
@@ -153,6 +154,42 @@ module "compute" {
 }
 
 # ========================================
+# Monitoring Module (Prometheus + Grafana)
+# ========================================
+
+module "monitoring" {
+  source = "../modules/monitoring"
+
+  project_name            = var.project_name
+  environment             = var.environment
+  vpc_id                  = module.vpc.vpc_id
+  private_subnet_id       = module.vpc.private_app_subnet_ids[0]
+  
+  # Security Groups
+  prometheus_security_group_id = module.security_groups.prometheus_security_group_id
+  grafana_security_group_id    = module.security_groups.grafana_security_group_id
+  
+  # ALB Configuration
+  alb_dns          = module.load_balancer.alb_dns_name
+  alb_listener_arn = module.load_balancer.http_listener_arn
+  
+  # Instance Types
+  prometheus_instance_type = "t3.small"
+  grafana_instance_type    = "t3.small"
+  
+  # NAT Gateway
+  nat_gateway_id = module.vpc.nat_gateway_id
+  
+  common_tags = var.tags
+
+  depends_on = [
+    module.vpc,
+    module.security_groups,
+    module.load_balancer
+  ]
+}
+
+# ========================================
 # DynamoDB Module
 # ========================================
 
@@ -161,8 +198,23 @@ module "dynamodb" {
 
   project_name = var.project_name
   environment  = var.environment
+  common_tags  = var.tags
+}
 
-  common_tags = var.tags
+# ========================================
+# Cache Module (Redis)
+# ========================================
+
+module "cache" {
+  source = "../modules/cache"
+
+  project_name       = var.project_name
+  environment        = var.environment
+  vpc_id             = module.vpc.vpc_id
+  subnet_ids         = module.vpc.private_data_subnet_ids # Data subnets for isolation
+  security_group_ids = [module.security_groups.ec2_security_group_id]
+  
+  tags = var.tags
 }
 
 # ========================================

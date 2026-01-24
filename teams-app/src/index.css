@@ -8,9 +8,68 @@ body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: #020202;
+  color: #ffffff;
 }
 
 #root {
   width: 100%;
   min-height: 100vh;
+  background: radial-gradient(circle at 50% 0%, rgba(255, 122, 0, 0.15) 0%, rgba(0, 0, 0, 0) 50%),
+              radial-gradient(circle at 100% 100%, rgba(255, 122, 0, 0.05) 0%, rgba(0, 0, 0, 0) 40%);
+}
+
+.velocity-card {
+  background: rgba(15, 15, 15, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.velocity-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(255, 122, 0, 0.5), transparent);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.velocity-card:hover {
+  transform: translateY(-5px);
+  border-color: rgba(255, 122, 0, 0.3);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(255, 122, 0, 0.05);
+}
+
+.velocity-card:hover::before {
+  opacity: 1;
+}
+
+.velocity-gradient-text {
+  background: linear-gradient(135deg, #FFB800 0%, #FF6B00 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 700;
+}
+
+.velocity-button {
+  background: linear-gradient(135deg, #FF9E00 0%, #FF6B00 100%);
+  color: #000;
+  border: none;
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.velocity-button:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 0 15px rgba(255, 107, 0, 0.4);
 }

@@ -179,6 +179,12 @@ variable "teams_webhook_url" {
   sensitive   = true
 }
 
+variable "redis_endpoint" {
+  description = "Redis endpoint for caching"
+  type        = string
+  default     = ""
+}
+
 # ============================================================================
 # DynamoDB Tables
 # ============================================================================

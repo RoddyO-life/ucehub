@@ -1,21 +1,11 @@
-output "prometheus_instance_id" {
-  description = "Prometheus instance ID"
-  value       = aws_ec2_instance.prometheus.id
+output "monitoring_instance_id" {
+  description = "Monitoring instance ID (from ASG)"
+  value       = aws_autoscaling_group.monitoring.id
 }
 
-output "prometheus_private_ip" {
-  description = "Prometheus private IP"
-  value       = aws_ec2_instance.prometheus.private_ip
-}
-
-output "grafana_instance_id" {
-  description = "Grafana instance ID"
-  value       = aws_ec2_instance.grafana.id
-}
-
-output "grafana_private_ip" {
-  description = "Grafana private IP"
-  value       = aws_ec2_instance.grafana.private_ip
+output "monitoring_asg_name" {
+  description = "Monitoring Auto Scaling Group name"
+  value       = aws_autoscaling_group.monitoring.name
 }
 
 output "prometheus_url" {

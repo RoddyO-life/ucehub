@@ -9,6 +9,7 @@ support_table="${support_table}"
 justifications_table="${justifications_table}"
 documents_bucket="${documents_bucket}"
 teams_webhook_url="${teams_webhook_url}"
+redis_endpoint="${redis_endpoint}"
 
 echo "UCEHub Deployment - $environment"
 
@@ -93,6 +94,7 @@ docker run -d --name ucehub-backend --restart unless-stopped \
   -e ABSENCE_JUSTIFICATIONS_TABLE="$justifications_table" \
   -e DOCUMENTS_BUCKET="$documents_bucket" \
   -e TEAMS_WEBHOOK_URL="$teams_webhook_url" \
+  -e REDIS_ENDPOINT="$redis_endpoint" \
   ucehub-backend
 
 mkdir -p /opt/frontend/dist
