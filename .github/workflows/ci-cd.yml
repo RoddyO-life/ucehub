@@ -24,7 +24,7 @@ jobs:
         run: npm ci
 
       - name: Nx Check
-        run: npx nx affected:lint --base=origin/main
+        run: npx nx affected:lint --base=HEAD~1
 
   # Job 2: QA Deployment (Branch: feature/prod-deployment)
   deploy-qa:
@@ -59,15 +59,44 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install and Build Frontend
+        run: |
+          npm ci
+          cd teams-app && npm run build
+      
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-2
+
+      - name: Deploy Frontend to S3 (Prod)
+        run: aws s3 sync teams-app/dist/ s3://ucehub-frontend-prod-5095/ --delete
+
+      - name: Deploy Backend to S3 (Prod)
+        run: |
+          mkdir -p deploy-backend
+          cp services/backend/server-production.js deploy-backend/server.js
+          cp services/backend/package.json deploy-backend/
+          cp services/backend/swagger.js deploy-backend/
+          cp services/backend/Dockerfile deploy-backend/
+          cd deploy-backend && zip -r backend.zip .
+          aws s3 cp backend.zip s3://ucehub-backend-prod-code/backend.zip
+
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
       
-      - name: Deploy Production
+      - name: Terraform Apply (Prod)
         run: |
           cd infrastructure/prod
           terraform init
           terraform apply -auto-approve
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: us-east-1
+
