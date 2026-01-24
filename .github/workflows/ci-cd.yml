@@ -44,6 +44,9 @@ jobs:
     if: github.ref == 'refs/heads/feature/prod-deployment'
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Create PR to Main
         uses: repo-sync/pull-request@v2
         with:
