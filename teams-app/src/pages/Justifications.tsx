@@ -1,6 +1,8 @@
 import React, { useState, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   makeStyles,
+  shorthands,
   Button,
   Spinner,
 } from '@fluentui/react-components'
@@ -9,6 +11,7 @@ import {
   AlertRegular,
   Delete20Regular,
   CloudAddRegular,
+  ArrowLeftRegular,
 } from '@fluentui/react-icons'
 import axios from 'axios'
 
@@ -27,43 +30,50 @@ const useStyles = makeStyles({
     gap: '24px',
     padding: '24px',
     minHeight: '100vh',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    background: 'transparent',
   },
   header: {
     color: '#ffffff',
     marginBottom: '16px',
+    textAlign: 'center',
   },
   headerTitle: {
-    fontSize: '28px',
-    fontWeight: '700',
+    fontSize: '32px',
+    fontWeight: '800',
     marginBottom: '8px',
+    background: 'linear-gradient(135deg, #FFB800 0%, #FF6B00 100%)',
+    '-webkit-background-clip': 'text',
+    '-webkit-text-fill-color': 'transparent',
   },
   headerSubtitle: {
-    fontSize: '14px',
+    fontSize: '16px',
     opacity: '0.9',
+    color: '#aaa',
   },
   card: {
-    background: 'rgba(255, 255, 255, 0.95)',
-    backdropFilter: 'blur(10px)',
-    borderRadius: '12px',
+    background: 'rgba(20, 20, 20, 0.6)',
+    backdropFilter: 'blur(16px)',
+    borderRadius: '16px',
     padding: '24px',
-    border: '1px solid rgba(255, 255, 255, 0.3)',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
   },
   uploadBox: {
-    border: '2px dashed #667eea',
-    borderRadius: '8px',
-    padding: '40px',
+    ...shorthands.border('2px', 'dashed', 'rgba(255, 184, 0, 0.3)'),
+    ...shorthands.borderRadius('12px'),
+    ...shorthands.padding('40px'),
     textAlign: 'center',
     cursor: 'pointer',
     transition: 'all 0.3s ease',
-    backgroundColor: 'rgba(102, 126, 234, 0.05)',
-    ':hover': {
-      backgroundColor: 'rgba(102, 126, 234, 0.1)',
+    backgroundColor: 'rgba(255, 184, 0, 0.02)',
+    '&:hover': {
+      backgroundColor: 'rgba(255, 184, 0, 0.05)',
+      ...shorthands.borderColor('#FFB800'),
     },
   },
   uploadIcon: {
     fontSize: '48px',
-    color: '#667eea',
+    color: '#FFB800',
     marginBottom: '16px',
   },
   fileInput: {
@@ -82,69 +92,79 @@ const useStyles = makeStyles({
   },
   label: {
     fontWeight: '600',
-    color: '#333333',
+    color: '#FFB800',
     fontSize: '14px',
   },
   input: {
-    padding: '10px',
-    border: '1px solid #e0e0e0',
-    borderRadius: '6px',
+    ...shorthands.padding('12px'),
+    background: 'rgba(255, 255, 255, 0.05)',
+    ...shorthands.border('1px', 'solid', 'rgba(255, 255, 255, 0.1)'),
+    ...shorthands.borderRadius('8px'),
     fontSize: '14px',
+    color: '#fff',
     fontFamily: 'inherit',
-    transition: 'border-color 0.2s',
-    ':focus': {
+    transition: 'all 0.3s ease',
+    '&:focus': {
       outline: 'none',
+      ...shorthands.borderColor('#FFB800'),
     },
   },
   textarea: {
-    padding: '10px',
-    border: '1px solid #e0e0e0',
-    borderRadius: '6px',
+    ...shorthands.padding('12px'),
+    background: 'rgba(255, 255, 255, 0.05)',
+    ...shorthands.border('1px', 'solid', 'rgba(255, 255, 255, 0.1)'),
+    ...shorthands.borderRadius('8px'),
     fontSize: '14px',
+    color: '#fff',
     fontFamily: 'inherit',
     minHeight: '100px',
     resize: 'vertical',
+    transition: 'all 0.3s ease',
+    '&:focus': {
+      outline: 'none',
+      ...shorthands.borderColor('#FFB800'),
+    },
   },
   filePreview: {
     display: 'flex',
     alignItems: 'center',
     gap: '12px',
-    padding: '12px',
-    backgroundColor: '#f0f4ff',
-    borderRadius: '6px',
-    border: '1px solid #667eea',
+    ...shorthands.padding('12px'),
+    backgroundColor: 'rgba(255, 184, 0, 0.05)',
+    ...shorthands.borderRadius('8px'),
+    ...shorthands.border('1px', 'solid', 'rgba(255, 184, 0, 0.2)'),
   },
   filePreviewText: {
     flex: 1,
     fontSize: '14px',
-    color: '#333333',
+    color: '#ffffff',
   },
   removeFileBtn: {
     background: 'none',
-    border: 'none',
+    ...shorthands.border('none'),
     cursor: 'pointer',
-    color: '#d13438',
-    padding: '4px',
+    color: '#FF3B30',
+    ...shorthands.padding('4px'),
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
   },
   submitButton: {
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    color: '#ffffff',
-    border: 'none',
-    padding: '12px 28px',
-    borderRadius: '6px',
-    fontWeight: '600',
-    fontSize: '14px',
+    background: 'linear-gradient(135deg, #FF9E00 0%, #FF6B00 100%)',
+    color: '#000',
+    ...shorthands.border('none'),
+    ...shorthands.padding('14px', '28px'),
+    ...shorthands.borderRadius('8px'),
+    fontWeight: '700',
+    fontSize: '15px',
     cursor: 'pointer',
     transition: 'all 0.3s ease',
-    ':hover': {
+    '&:hover': {
       transform: 'translateY(-2px)',
-      boxShadow: '0 12px 24px rgba(102, 126, 234, 0.4)',
+      boxShadow: '0 8px 20px rgba(255, 158, 0, 0.4)',
     },
-    ':disabled': {
-      opacity: '0.5',
+    '&:disabled': {
+      opacity: '0.4',
       cursor: 'not-allowed',
     },
   },
@@ -152,20 +172,22 @@ const useStyles = makeStyles({
     display: 'flex',
     flexDirection: 'column',
     gap: '12px',
-    marginTop: '16px',
+    marginTop: '20px',
   },
   justificationItem: {
-    background: 'rgba(255, 255, 255, 0.8)',
-    border: '1px solid #e0e0e0',
-    borderRadius: '8px',
-    padding: '16px',
+    background: 'rgba(255, 255, 255, 0.03)',
+    ...shorthands.border('1px', 'solid', 'rgba(255, 255, 255, 0.05)'),
+    ...shorthands.borderRadius('12px'),
+    ...shorthands.padding('16px'),
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    transition: 'all 0.2s',
-    ':hover': {
-      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-    },
+    transition: 'all 0.3s ease',
+    '&:hover': {
+        background: 'rgba(255, 255, 255, 0.06)',
+        ...shorthands.borderColor('rgba(255, 184, 0, 0.3)'),
+        transform: 'translateX(5px)',
+    }
   },
   justificationStatus: {
     display: 'flex',
@@ -173,45 +195,75 @@ const useStyles = makeStyles({
     gap: '8px',
   },
   statusBadge: {
-    padding: '4px 12px',
-    borderRadius: '12px',
+    ...shorthands.padding('4px', '12px'),
+    ...shorthands.borderRadius('12px'),
     fontSize: '12px',
-    fontWeight: '600',
+    fontWeight: '700',
+    textTransform: 'uppercase',
   },
   statusApproved: {
-    background: '#dcf5dd',
-    color: '#107c10',
+    background: 'rgba(0, 255, 136, 0.1)',
+    color: '#00FF88',
   },
   statusPending: {
-    background: '#fff4ce',
-    color: '#b86f00',
+    background: 'rgba(255, 184, 0, 0.1)',
+    color: '#FFB800',
   },
   statusRejected: {
-    background: '#fed4d4',
-    color: '#a4373a',
+    background: 'rgba(255, 59, 48, 0.1)',
+    color: '#FF3B30',
   },
   actionButtons: {
     display: 'flex',
     gap: '8px',
   },
   viewButton: {
-    background: '#667eea',
-    color: '#ffffff',
-    border: 'none',
-    padding: '8px 16px',
-    borderRadius: '4px',
+    background: 'rgba(255, 184, 0, 0.1)',
+    color: '#FFB800',
+    ...shorthands.border('1px', 'solid', 'rgba(255, 184, 0, 0.2)'),
+    ...shorthands.padding('8px', '16px'),
+    ...shorthands.borderRadius('8px'),
     cursor: 'pointer',
     fontSize: '12px',
     fontWeight: '600',
+    transition: 'all 0.2s',
+    '&:hover': {
+      background: 'rgba(255, 184, 0, 0.2)',
+    },
   },
   emptyState: {
     textAlign: 'center',
-    padding: '40px 20px',
+    ...shorthands.padding('40px', '20px'),
+    background: 'rgba(255, 255, 255, 0.02)',
+    ...shorthands.borderRadius('16px'),
+    ...shorthands.border('1px', 'dashed', 'rgba(255, 255, 255, 0.1)'),
+    color: '#888',
   },
   emptyIcon: {
     fontSize: '48px',
     marginBottom: '16px',
     opacity: '0.5',
+    color: '#FFB800',
+  },
+  backButton: {
+    background: 'rgba(255, 255, 255, 0.05)',
+    ...shorthands.border('1px', 'solid', 'rgba(255, 255, 255, 0.1)'),
+    color: '#fff',
+    ...shorthands.padding('10px', '20px'),
+    ...shorthands.borderRadius('12px'),
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: '600',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    transition: 'all 0.3s ease',
+    marginBottom: '20px',
+    '&:hover': {
+      background: 'rgba(255, 255, 255, 0.1)',
+      ...shorthands.borderColor('#FFB800'),
+      transform: 'translateX(-5px)',
+    }
   },
 })
 
@@ -226,6 +278,7 @@ interface Justification {
 
 export const Justifications: React.FC = () => {
   const styles = useStyles()
+  const navigate = useNavigate()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [reason, setReason] = useState('')
@@ -351,11 +404,15 @@ export const Justifications: React.FC = () => {
 
   return (
     <div className={styles.container}>
+      <button className={styles.backButton} onClick={() => navigate('/')}>
+        <ArrowLeftRegular /> Volver al Inicio
+      </button>
+
       {/* Header */}
       <div className={styles.header}>
-        <div className={styles.headerTitle}>📄 Mis Justificaciones</div>
+        <div className={styles.headerTitle}>Gestión de Justificaciones</div>
         <div className={styles.headerSubtitle}>
-          Carga documentos para justificar tus ausencias
+          Administra tus ausencias y carga certificados académicos con validación inteligente.
         </div>
       </div>
 

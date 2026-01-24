@@ -1,0 +1,73 @@
+name: UCEHub CI/CD Flow
+on:
+  push:
+    branches: [ main, feature/prod-deployment ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  # Job 1: Build & Quality Check
+  build-and-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install
+        run: npm ci
+
+      - name: Nx Check
+        run: npx nx affected:lint --base=origin/main
+
+  # Job 2: QA Deployment (Branch: feature/prod-deployment)
+  deploy-qa:
+    needs: build-and-lint
+    if: github.ref == 'refs/heads/feature/prod-deployment'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy to QA
+        run: |
+          echo "Desplegando automáticamente en Ambiente de QA..."
+          # Aquí irían los comandos de AWS para S3 y Terraform Apply de QA
+
+  # Job 3: Auto-PR to JuanGuevara90
+  create-pr:
+    needs: deploy-qa
+    if: github.ref == 'refs/heads/feature/prod-deployment'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create PR to Main
+        uses: repo-sync/pull-request@v2
+        with:
+          destination_branch: "main"
+          pr_title: "🚀 PROD: Merge QA changes to Main - Review for @JuanGuevara90"
+          pr_body: "Solicitud automática de despliegue a producción tras verificar en QA."
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+  # Job 4: Production Deployment (Branch: main)
+  deploy-prod:
+    needs: build-and-lint
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+      
+      - name: Deploy Production
+        run: |
+          cd infrastructure/prod
+          terraform init
+          terraform apply -auto-approve
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: us-east-1

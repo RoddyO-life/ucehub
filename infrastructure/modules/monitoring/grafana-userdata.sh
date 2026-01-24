@@ -41,6 +41,10 @@ EOF
 # Update Grafana configuration for production
 cat >> /etc/grafana/grafana.ini <<EOF
 
+[server]
+root_url = http://localhost:3000/grafana
+serve_from_sub_path = true
+
 [security]
 admin_password = GrafanaAdmin@2024!
 

@@ -280,3 +280,139 @@ resource "aws_vpc_security_group_egress_rule" "rds_all" {
     }
   )
 }
+
+# ============================================================================
+# PROMETHEUS SECURITY GROUP
+# ============================================================================
+resource "aws_security_group" "prometheus" {
+  name        = "${var.project_name}-prometheus-sg-${var.environment}"
+  description = "Security group for Prometheus monitoring"
+  vpc_id      = var.vpc_id
+
+  tags = merge(
+    var.common_tags,
+    {
+      Name = "${var.project_name}-prometheus-sg-${var.environment}"
+    }
+  )
+}
+
+# Allow Prometheus port from ALB
+resource "aws_vpc_security_group_ingress_rule" "prometheus_from_alb" {
+  security_group_id = aws_security_group.prometheus.id
+  description       = "Allow Prometheus from ALB"
+  
+  referenced_security_group_id = aws_security_group.alb.id
+  from_port                    = 9090
+  to_port                      = 9090
+  ip_protocol                  = "tcp"
+
+  tags = merge(
+    var.common_tags,
+    {
+      Name = "prometheus-from-alb"
+    }
+  )
+}
+
+# Allow Prometheus port from Grafana
+resource "aws_vpc_security_group_ingress_rule" "prometheus_from_grafana" {
+  security_group_id = aws_security_group.prometheus.id
+  description       = "Allow Prometheus from Grafana"
+  
+  referenced_security_group_id = aws_security_group.grafana.id
+  from_port                    = 9090
+  to_port                      = 9090
+  ip_protocol                  = "tcp"
+
+  tags = merge(
+    var.common_tags,
+    {
+      Name = "prometheus-from-grafana"
+    }
+  )
+}
+
+# Allow Prometheus port from EC2 instances (for scraping)
+resource "aws_vpc_security_group_ingress_rule" "prometheus_from_ec2" {
+  security_group_id = aws_security_group.prometheus.id
+  description       = "Allow Prometheus scrape from EC2 instances"
+  
+  referenced_security_group_id = aws_security_group.ec2_instances.id
+  from_port                    = 9090
+  to_port                      = 9090
+  ip_protocol                  = "tcp"
+
+  tags = merge(
+    var.common_tags,
+    {
+      Name = "prometheus-from-ec2"
+    }
+  )
+}
+
+# Allow all outbound traffic
+resource "aws_vpc_security_group_egress_rule" "prometheus_all" {
+  security_group_id = aws_security_group.prometheus.id
+  description       = "Allow all outbound traffic"
+  
+  cidr_ipv4   = "0.0.0.0/0"
+  ip_protocol = "-1"
+
+  tags = merge(
+    var.common_tags,
+    {
+      Name = "prometheus-all-egress"
+    }
+  )
+}
+
+# ============================================================================
+# GRAFANA SECURITY GROUP
+# ============================================================================
+resource "aws_security_group" "grafana" {
+  name        = "${var.project_name}-grafana-sg-${var.environment}"
+  description = "Security group for Grafana visualization"
+  vpc_id      = var.vpc_id
+
+  tags = merge(
+    var.common_tags,
+    {
+      Name = "${var.project_name}-grafana-sg-${var.environment}"
+    }
+  )
+}
+
+# Allow Grafana port from ALB
+resource "aws_vpc_security_group_ingress_rule" "grafana_from_alb" {
+  security_group_id = aws_security_group.grafana.id
+  description       = "Allow Grafana from ALB"
+  
+  referenced_security_group_id = aws_security_group.alb.id
+  from_port                    = 3000
+  to_port                      = 3000
+  ip_protocol                  = "tcp"
+
+  tags = merge(
+    var.common_tags,
+    {
+      Name = "grafana-from-alb"
+    }
+  )
+}
+
+# Allow all outbound traffic
+resource "aws_vpc_security_group_egress_rule" "grafana_all" {
+  security_group_id = aws_security_group.grafana.id
+  description       = "Allow all outbound traffic"
+  
+  cidr_ipv4   = "0.0.0.0/0"
+  ip_protocol = "-1"
+
+  tags = merge(
+    var.common_tags,
+    {
+      Name = "grafana-all-egress"
+    }
+  )
+}

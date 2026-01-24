@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Button,
   Card,
@@ -10,66 +11,147 @@ import {
   Input,
   Textarea,
   Field,
-  Spinner
+  Spinner,
+  Body1,
 } from '@fluentui/react-components'
 import {
   DocumentBulletList24Regular,
   ArrowUpload24Regular,
   Checkmark24Regular,
-  DocumentPdf24Regular
+  DocumentPdf24Regular,
+  ArrowLeftRegular,
 } from '@fluentui/react-icons'
 import axios from 'axios'
 
 const useStyles = makeStyles({
   container: {
-    ...shorthands.padding('24px'),
-    backgroundColor: tokens.colorNeutralBackground3,
+    padding: '24px',
+    backgroundColor: 'transparent',
     minHeight: '100vh',
-    maxWidth: '800px',
-    margin: '0 auto'
+    maxWidth: '1200px',
+    margin: '0 auto',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '24px',
   },
   header: {
     textAlign: 'center',
-    ...shorthands.padding('20px'),
-    backgroundColor: tokens.colorPaletteRoyalBlueBackground2,
-    ...shorthands.borderRadius('12px'),
-    color: 'white',
-    marginBottom: '24px'
+    padding: '40px',
+    backgroundColor: 'rgba(20, 20, 20, 0.4)',
+    backdropFilter: 'blur(10px)',
+    borderRadius: '16px',
+    border: '1px solid rgba(255, 255, 255, 0.05)',
+    marginBottom: '24px',
+  },
+  headerTitle: {
+    fontSize: '32px',
+    fontWeight: '800',
+    background: 'linear-gradient(135deg, #FFB800 0%, #FF6B00 100%)',
+    '-webkit-background-clip': 'text',
+    '-webkit-text-fill-color': 'transparent',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '12px',
+  },
+  headerSubtitle: {
+    color: '#aaa',
+    fontSize: '16px',
+    marginTop: '8px',
   },
   formCard: {
-    ...shorthands.padding('24px')
+    padding: '32px',
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    border: '1px solid rgba(255, 255, 255, 0.05)',
+    borderRadius: '16px',
+    backdropFilter: 'blur(16px)',
   },
   fileUpload: {
-    ...shorthands.border('2px', 'dashed', tokens.colorBrandStroke1),
-    ...shorthands.padding('24px'),
-    ...shorthands.borderRadius('8px'),
+    border: '2px dashed rgba(255, 184, 0, 0.3)',
+    padding: '32px',
+    borderRadius: '12px',
     textAlign: 'center',
     cursor: 'pointer',
-    backgroundColor: tokens.colorNeutralBackground2,
+    backgroundColor: 'rgba(255, 184, 0, 0.03)',
+    transition: 'all 0.3s ease',
     '&:hover': {
-      backgroundColor: tokens.colorNeutralBackground3
+      backgroundColor: 'rgba(255, 184, 0, 0.06)',
+      borderColor: '#FFB800',
     }
   },
   fileSelected: {
     display: 'flex',
     alignItems: 'center',
-    ...shorthands.gap('12px'),
-    ...shorthands.padding('12px'),
-    backgroundColor: tokens.colorPaletteGreenBackground3,
-    ...shorthands.borderRadius('8px'),
-    color: 'white'
+    gap: '12px',
+    padding: '16px',
+    backgroundColor: 'rgba(0, 183, 117, 0.1)',
+    borderRadius: '10px',
+    border: '1px solid rgba(0, 183, 117, 0.2)',
+    color: '#00B775',
   },
   successMessage: {
     textAlign: 'center',
-    ...shorthands.padding('40px'),
-    backgroundColor: tokens.colorPaletteGreenBackground3,
-    ...shorthands.borderRadius('12px'),
-    color: 'white'
+    padding: '60px',
+    backgroundColor: 'rgba(0, 183, 117, 0.05)',
+    border: '1px solid rgba(0, 183, 117, 0.2)',
+    borderRadius: '20px',
+    color: '#fff',
+  },
+  grid: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '20px',
+    '@media (max-width: 600px)': {
+      gridTemplateColumns: '1fr',
+    }
+  },
+  input: {
+    backgroundColor: 'rgba(255, 255, 255, 0.05) !important',
+    color: '#fff !important',
+    borderRadius: '8px !important',
+    border: '1px solid rgba(255, 255, 255, 0.1) !important',
+  },
+  submitButton: {
+    background: 'linear-gradient(135deg, #FFB800 0%, #FF6B00 100%)',
+    color: '#000',
+    fontWeight: '700',
+    padding: '12px 32px',
+    borderRadius: '10px',
+    border: 'none',
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
+    marginTop: '20px',
+    width: '100%',
+    '&:hover': {
+      boxShadow: '0 0 20px rgba(255, 184, 0, 0.3)',
+      transform: 'translateY(-2px)',
+    }
+  },
+  backButton: {
+    background: 'rgba(255, 255, 255, 0.05)',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
+    color: '#fff',
+    padding: '10px 20px',
+    borderRadius: '12px',
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: '600',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    transition: 'all 0.3s ease',
+    alignSelf: 'flex-start',
+    '&:hover': {
+      background: 'rgba(255, 255, 255, 0.1)',
+      borderColor: '#FFB800',
+      transform: 'translateX(-5px)',
+    }
   }
 })
 
 export default function CertificadosNew() {
   const styles = useStyles()
+  const navigate = useNavigate()
   const [formData, setFormData] = useState({
     userName: '',
     userEmail: '',
@@ -161,152 +243,158 @@ export default function CertificadosNew() {
   if (submitted) {
     return (
       <div className={styles.container}>
-        <Card className={styles.successMessage}>
-          <Checkmark24Regular style={{ fontSize: '64px', marginBottom: '16px' }} />
-          <Title3 style={{ marginBottom: '16px' }}>¡Justificación Enviada!</Title3>
-          <Subtitle2>ID: {justificationId}</Subtitle2>
-          <p style={{ marginTop: '16px', opacity: 0.9 }}>
-            Tu justificación ha sido enviada a rjortega@uce.edu.ec
+        <div className={styles.successMessage}>
+          <Checkmark24Regular style={{ fontSize: '64px', marginBottom: '16px', color: '#00B775' }} />
+          <h2 style={{ fontSize: '28px', fontWeight: '800', marginBottom: '16px' }}>¡Solicitud Enviada!</h2>
+          <Body1 style={{ fontSize: '18px', color: '#aaa', display: 'block' }}>ID Seguimiento: {justificationId}</Body1>
+          <p style={{ marginTop: '24px', color: '#ccc', lineHeight: '1.6' }}>
+            Tu solicitud de certificado/justificación ha sido enviada con éxito.<br/>
+            Un revisor académico procesará tu pedido en las próximas 24-48 horas.
           </p>
-          <p style={{ opacity: 0.9 }}>
-            Recibirás una respuesta en tu correo electrónico
-          </p>
-          <Button
-            appearance="secondary"
-            onClick={resetForm}
-            style={{ marginTop: '24px', backgroundColor: 'white', color: tokens.colorBrandForeground1 }}
-          >
-            Enviar Otra Justificación
-          </Button>
-        </Card>
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '32px' }}>
+            <Button
+              appearance="primary"
+              onClick={resetForm}
+              style={{ background: '#FFB800', color: '#000', fontWeight: 'bold' }}
+            >
+              Nueva Solicitud
+            </Button>
+            <Button
+                appearance="outline"
+                onClick={() => navigate('/')}
+                style={{ color: '#fff', borderColor: 'rgba(255,255,255,0.2)' }}
+            >
+                Volver al Inicio
+            </Button>
+          </div>
+        </div>
       </div>
     )
   }
 
   return (
     <div className={styles.container}>
+      <button className={styles.backButton} onClick={() => navigate('/')}>
+        <ArrowLeftRegular /> Volver al Inicio
+      </button>
+
       <div className={styles.header}>
-        <Title3 style={{ marginBottom: '8px' }}>
-          <DocumentBulletList24Regular /> Justificar Falta
-        </Title3>
-        <Subtitle2>Envía tu justificación de ausencia con documento</Subtitle2>
+        <h1 className={styles.headerTitle}>
+          <DocumentBulletList24Regular style={{ color: '#FFB800' }} /> Certificados y Justificaciones
+        </h1>
+        <p className={styles.headerSubtitle}>Portal de gestión académica automatizada de la UCE</p>
       </div>
 
-      <Card className={styles.formCard}>
+      <div className={styles.formCard}>
         <form onSubmit={handleSubmit}>
-          <Field label="Nombre completo" required>
-            <Input
-              value={formData.userName}
-              onChange={(_, data) => setFormData({ ...formData, userName: data.value })}
-              placeholder="Tu nombre"
-              required
-            />
-          </Field>
-
-          <Field label="Email" required style={{ marginTop: '16px' }}>
-            <Input
-              value={formData.userEmail}
-              onChange={(_, data) => setFormData({ ...formData, userEmail: data.value })}
-              placeholder="tu@email.com"
-              type="email"
-              required
-            />
-          </Field>
-
-          <Field label="Motivo de la ausencia" required style={{ marginTop: '16px' }}>
-            <Textarea
-              value={formData.reason}
-              onChange={(_, data) => setFormData({ ...formData, reason: data.value })}
-              placeholder="Describe el motivo de tu ausencia..."
-              rows={4}
-              required
-            />
-          </Field>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginTop: '16px' }}>
-            <Field label="Fecha de inicio" required>
+          <div className={styles.grid}>
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ color: '#aaa', fontSize: '13px', display: 'block', marginBottom: '8px' }}>Nombre Completo</label>
               <Input
-                value={formData.startDate}
-                onChange={(_, data) => setFormData({ ...formData, startDate: data.value })}
-                type="date"
-                required
+                className={styles.input}
+                style={{ width: '100%' }}
+                value={formData.userName}
+                onChange={(_, data) => setFormData({ ...formData, userName: data.value })}
+                placeholder="Ej. Juan Pérez"
               />
-            </Field>
-
-            <Field label="Fecha de fin" required>
+            </div>
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ color: '#aaa', fontSize: '13px', display: 'block', marginBottom: '8px' }}>Correo Institucional</label>
               <Input
-                value={formData.endDate}
-                onChange={(_, data) => setFormData({ ...formData, endDate: data.value })}
-                type="date"
-                required
+                className={styles.input}
+                style={{ width: '100%' }}
+                type="email"
+                value={formData.userEmail}
+                onChange={(_, data) => setFormData({ ...formData, userEmail: data.value })}
+                placeholder="ejemplo@uce.edu.ec"
               />
-            </Field>
+            </div>
           </div>
 
-          <Field label="Documento PDF (Certificado médico u otro)" required style={{ marginTop: '16px' }}>
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{ color: '#aaa', fontSize: '13px', display: 'block', marginBottom: '8px' }}>Tipo de Solicitud / Motivo</label>
+            <Textarea
+              className={styles.input}
+              style={{ width: '100%' }}
+              value={formData.reason}
+              onChange={(_, data) => setFormData({ ...formData, reason: data.value })}
+              placeholder="Describe brevemente tu requerimiento..."
+              rows={4}
+            />
+          </div>
+
+          <div className={styles.grid}>
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ color: '#aaa', fontSize: '13px', display: 'block', marginBottom: '8px' }}>Fecha Inicio</label>
+              <Input
+                className={styles.input}
+                style={{ width: '100%' }}
+                type="date"
+                value={formData.startDate}
+                onChange={(_, data) => setFormData({ ...formData, startDate: data.value })}
+              />
+            </div>
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ color: '#aaa', fontSize: '13px', display: 'block', marginBottom: '8px' }}>Fecha Fin</label>
+              <Input
+                className={styles.input}
+                style={{ width: '100%' }}
+                type="date"
+                value={formData.endDate}
+                onChange={(_, data) => setFormData({ ...formData, endDate: data.value })}
+              />
+            </div>
+          </div>
+
+          <div style={{ margin: '24px 0' }}>
+            <label style={{ color: '#aaa', fontSize: '13px', display: 'block', marginBottom: '8px' }}>Documento de Respaldo (PDF)</label>
             {!selectedFile ? (
-              <label className={styles.fileUpload}>
+              <div 
+                className={styles.fileUpload}
+                onClick={() => document.getElementById('fileInput')?.click()}
+              >
+                <ArrowUpload24Regular style={{ fontSize: '32px', marginBottom: '12px', color: '#FFB800' }} />
+                <div style={{ color: '#fff', fontWeight: '600' }}>Cargar Documento PDF</div>
+                <div style={{ color: '#666', fontSize: '12px', marginTop: '4px' }}>Máximo 5MB</div>
                 <input
+                  id="fileInput"
                   type="file"
-                  accept="application/pdf"
+                  hidden
+                  accept=".pdf"
                   onChange={handleFileChange}
-                  style={{ display: 'none' }}
                 />
-                <ArrowUpload24Regular style={{ fontSize: '48px', color: tokens.colorBrandForeground1 }} />
-                <Subtitle2>Haz clic para subir un archivo PDF</Subtitle2>
-                <p style={{ fontSize: '12px', color: tokens.colorNeutralForeground3, marginTop: '8px' }}>
-                  Tamaño máximo: 5MB
-                </p>
-              </label>
+              </div>
             ) : (
               <div className={styles.fileSelected}>
-                <DocumentPdf24Regular fontSize={24} />
+                <DocumentPdf24Regular style={{ fontSize: '24px' }} />
                 <div style={{ flex: 1 }}>
-                  <Subtitle2>{selectedFile.name}</Subtitle2>
-                  <p style={{ fontSize: '12px', opacity: 0.9 }}>
-                    {(selectedFile.size / 1024).toFixed(2)} KB
-                  </p>
+                  <div style={{ fontWeight: 'bold' }}>{selectedFile.name}</div>
+                  <div style={{ fontSize: '12px', opacity: 0.8 }}>{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</div>
                 </div>
-                <Button
-                  appearance="secondary"
-                  onClick={() => {
-                    setSelectedFile(null)
-                    setDocumentBase64('')
-                  }}
-                  style={{ backgroundColor: 'white', color: tokens.colorBrandForeground1 }}
+                <Button 
+                  appearance="subtle" 
+                  onClick={() => setSelectedFile(null)}
+                  style={{ color: '#ff4d4d' }}
                 >
-                  Cambiar
+                  Quitar
                 </Button>
               </div>
             )}
-          </Field>
-
-          <div style={{ marginTop: '24px', padding: '16px', backgroundColor: tokens.colorNeutralBackground2, borderRadius: '8px' }}>
-            <Subtitle2>📧 Notificación</Subtitle2>
-            <p style={{ fontSize: '14px', marginTop: '8px', color: tokens.colorNeutralForeground3 }}>
-              Se enviará un correo electrónico a <strong>rjortega@uce.edu.ec</strong> con tu justificación y el documento adjunto.
-            </p>
           </div>
 
-          <div style={{ marginTop: '24px', display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-            <Button
-              appearance="secondary"
-              onClick={resetForm}
-              type="button"
-            >
-              Limpiar
-            </Button>
-            <Button
-              appearance="primary"
-              icon={<DocumentBulletList24Regular />}
-              type="submit"
-              disabled={submitting}
-            >
-              {submitting ? <Spinner size="tiny" /> : 'Enviar Justificación'}
-            </Button>
-          </div>
+          <button 
+            type="submit" 
+            className={styles.submitButton}
+            disabled={submitting}
+          >
+            {submitting ? (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+                <Spinner size="tiny" labelPosition="after" /> Enviando...
+              </div>
+            ) : 'Enviar Solicitud'}
+          </button>
         </form>
-      </Card>
+      </div>
     </div>
   )
 }

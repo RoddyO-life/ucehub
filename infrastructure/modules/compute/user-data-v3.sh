@@ -51,7 +51,16 @@ docker run -d \
   -e DOCUMENTS_BUCKET="ucehub-documents-qa-015109422820" \
   -e TEAMS_WEBHOOK_URL="${teams_webhook_url}" \
   -e PORT=3001 \
+  -e RABBITMQ_URL="amqp://guest:guest@localhost:5672" \
   ucehub-backend:latest
+
+# Run RabbitMQ container
+docker run -d \
+  --name ucehub-rabbitmq \
+  --restart unless-stopped \
+  -p 5672:5672 \
+  -p 15672:15672 \
+  rabbitmq:3-management
 
 # Download and configure frontend
 mkdir -p /usr/share/nginx/html

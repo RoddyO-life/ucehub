@@ -81,6 +81,7 @@ resource "aws_launch_template" "app_servers" {
     justifications_table  = var.absence_justifications_table_name
     documents_bucket      = var.documents_bucket_name
     teams_webhook_url     = var.teams_webhook_url
+    redis_endpoint        = var.redis_endpoint
   }))
 
   # EBS configuration

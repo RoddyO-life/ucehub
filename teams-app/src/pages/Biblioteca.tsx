@@ -2,11 +2,8 @@ import { useState } from 'react'
 import {
   makeStyles,
   Button,
-  Card,
-  Title2,
   Title3,
   Body1,
-  tokens,
   Spinner,
   Badge,
   Input,
@@ -15,51 +12,117 @@ import {
   BookRegular,
   SearchRegular,
   CheckmarkCircleRegular,
-  ClockRegular
+  ClockRegular,
+  ArrowLeftRegular,
 } from '@fluentui/react-icons'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 
 const useStyles = makeStyles({
   container: {
-    padding: '20px',
-    maxWidth: '1000px',
+    padding: '24px',
+    backgroundColor: 'transparent',
+    minHeight: '100vh',
+    maxWidth: '1200px',
     margin: '0 auto',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '24px',
   },
   header: {
-    marginBottom: '30px',
+    textAlign: 'center',
+    padding: '40px',
+    backgroundColor: 'rgba(20, 20, 20, 0.4)',
+    backdropFilter: 'blur(10px)',
+    borderRadius: '16px',
+    border: '1px solid rgba(255, 255, 255, 0.05)',
+    marginBottom: '24px',
+  },
+  headerTitle: {
+    fontSize: '32px',
+    fontWeight: '800',
+    background: 'linear-gradient(135deg, #FFB800 0%, #FF6B00 100%)',
+    '-webkit-background-clip': 'text',
+    '-webkit-text-fill-color': 'transparent',
     display: 'flex',
     alignItems: 'center',
-    gap: '15px',
+    justifyContent: 'center',
+    gap: '12px',
   },
-  icon: {
-    fontSize: '40px',
-    color: tokens.colorBrandForeground1,
+  headerSubtitle: {
+    color: '#aaa',
+    fontSize: '16px',
+    marginTop: '8px',
   },
   searchBox: {
-    marginBottom: '20px',
+    padding: '20px',
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    borderRadius: '16px',
+    border: '1px solid rgba(255, 255, 255, 0.05)',
+  },
+  input: {
+    backgroundColor: 'rgba(255, 255, 255, 0.05) !important',
+    color: '#fff !important',
+    borderRadius: '12px !important',
+    border: '1px solid rgba(255, 255, 255, 0.1) !important',
+    padding: '10px !important',
   },
   grid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
     gap: '20px',
-    marginTop: '20px',
   },
   card: {
-    padding: '20px',
+    padding: '24px',
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    border: '1px solid rgba(255, 255, 255, 0.05)',
+    borderRadius: '16px',
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    '&:hover': {
+      backgroundColor: 'rgba(255, 255, 255, 0.06)',
+      borderColor: 'rgba(255, 184, 0, 0.3)',
+      transform: 'translateY(-4px)',
+    }
   },
   bookInfo: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '10px',
+    gap: '12px',
   },
   actions: {
     display: 'flex',
     gap: '10px',
-    marginTop: '15px',
+    marginTop: '20px',
+  },
+  reserveButton: {
+    background: 'linear-gradient(135deg, #FFB800 0%, #FF6B00 100%)',
+    color: '#000',
+    fontWeight: '700',
+    borderRadius: '10px',
+    border: 'none',
+    '&:hover': {
+      boxShadow: '0 0 15px rgba(255, 184, 0, 0.3)',
+    }
   },
   backButton: {
-    marginBottom: '20px',
+    background: 'rgba(255, 255, 255, 0.05)',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
+    color: '#fff',
+    padding: '10px 20px',
+    borderRadius: '12px',
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: '600',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    transition: 'all 0.3s ease',
+    alignSelf: 'flex-start',
+    '&:hover': {
+      background: 'rgba(255, 255, 255, 0.1)',
+      borderColor: '#FFB800',
+      transform: 'translateX(-5px)',
+    }
   },
 })
 
@@ -133,60 +196,70 @@ const Biblioteca = () => {
 
   return (
     <div className={styles.container}>
-      <Button 
-        className={styles.backButton}
-        onClick={() => navigate('/')}
-      >
-        ← Volver
-      </Button>
+      <button className={styles.backButton} onClick={() => navigate('/')}>
+        <ArrowLeftRegular /> Volver al Inicio
+      </button>
 
       <div className={styles.header}>
-        <BookRegular className={styles.icon} />
-        <div>
-          <Title2>Biblioteca Digital</Title2>
-          <Body1>Busca y reserva libros de la biblioteca UCE</Body1>
-        </div>
+        <h1 className={styles.headerTitle}>
+          <BookRegular style={{ color: '#FFB800' }} /> Biblioteca Digital UCE
+        </h1>
+        <p className={styles.headerSubtitle}>Accede a miles de recursos académicos y reserva libros físicos</p>
       </div>
 
       <div className={styles.searchBox}>
         <Input
-          placeholder="Buscar por título o autor..."
+          className={styles.input}
+          placeholder="Busca por título, autor o categoría..."
           value={searchTerm}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
-          contentBefore={<SearchRegular />}
+          contentBefore={<SearchRegular style={{ color: '#FFB800' }} />}
           style={{ width: '100%' }}
         />
       </div>
 
       {message && (
-        <Card style={{ marginBottom: '20px', padding: '15px', backgroundColor: tokens.colorPaletteGreenBackground2 }}>
-          <Body1>{message}</Body1>
-        </Card>
+        <div style={{ 
+            padding: '16px', 
+            borderRadius: '12px', 
+            backgroundColor: 'rgba(0, 183, 117, 0.1)', 
+            border: '1px solid rgba(0, 183, 117, 0.2)',
+            color: '#00B775',
+            textAlign: 'center',
+            marginBottom: '20px'
+        }}>
+          {message}
+        </div>
       )}
 
       <div className={styles.grid}>
         {filteredLibros.map((libro) => (
-          <Card key={libro.id} className={styles.card}>
+          <div key={libro.id} className={styles.card}>
             <div className={styles.bookInfo}>
-              <Title3>{libro.titulo}</Title3>
-              <Body1><strong>Autor:</strong> {libro.autor}</Body1>
-              <Body1><strong>ISBN:</strong> {libro.isbn}</Body1>
-              <Badge color={libro.disponibles > 0 ? 'success' : 'danger'}>
-                {libro.disponibles > 0 ? `${libro.disponibles} disponibles` : 'No disponible'}
-              </Badge>
-              <Badge>{libro.categoria}</Badge>
+              <Title3 style={{ color: '#fff', fontWeight: '800' }}>{libro.titulo}</Title3>
+              <Body1 style={{ color: '#aaa' }}><strong>Autor:</strong> {libro.autor}</Body1>
+              <Body1 style={{ color: '#888', fontSize: '12px' }}><strong>ISBN:</strong> {libro.isbn}</Body1>
+              
+              <div style={{ display: 'flex', gap: '8px', margin: '8px 0' }}>
+                <Badge appearance="filled" color={libro.disponibles > 0 ? 'success' : 'danger'}>
+                    {libro.disponibles > 0 ? `${libro.disponibles} Libros` : 'Agotado'}
+                </Badge>
+                <Badge appearance="outline" style={{ color: '#FFB800', borderColor: '#FFB800' }}>{libro.categoria}</Badge>
+              </div>
+
               <div className={styles.actions}>
                 <Button
-                  appearance="primary"
+                  className={styles.reserveButton}
                   icon={libro.disponibles > 0 ? <CheckmarkCircleRegular /> : <ClockRegular />}
                   onClick={() => handleReservar(libro)}
                   disabled={loading || libro.disponibles === 0}
+                  style={{ width: '100%', padding: '10px' }}
                 >
-                  {loading ? <Spinner size="tiny" /> : libro.disponibles > 0 ? 'Reservar' : 'En espera'}
+                  {loading ? <Spinner size="tiny" /> : libro.disponibles > 0 ? 'Reservar Ahora' : 'Lista de Espera'}
                 </Button>
               </div>
             </div>
-          </Card>
+          </div>
         ))}
       </div>
     </div>

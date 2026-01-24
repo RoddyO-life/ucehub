@@ -6,6 +6,7 @@ const { S3Client, PutObjectCommand, GetObjectCommand } = require('@aws-sdk/clien
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const { v4: uuidv4 } = require('uuid');
 const axios = require('axios');
+const { swaggerUi, specs } = require('./swagger');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -13,6 +14,15 @@ const PORT = process.env.PORT || 3001;
 // Middleware
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
+
+// Logger for debugging paths
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} - ${req.path}`);
+  next();
+});
+
+// Swagger Documentation
+app.use(['/api-docs', '/api/api-docs'], swaggerUi.serve, swaggerUi.setup(specs));
 
 // AWS Configuration
 const region = process.env.AWS_REGION || 'us-east-1';
@@ -72,6 +82,15 @@ async function sendTeamsNotification(title, message, facts = [], actions = []) {
 }
 
 // Health check
+/**
+ * @openapi
+ * /health:
+ *   get:
+ *     description: Retorna el estado de salud de la API y su conectividad con AWS.
+ *     responses:
+ *       200:
+ *         description: OK
+ */
 app.get('/health', (req, res) => {
   res.json({
     status: 'healthy',

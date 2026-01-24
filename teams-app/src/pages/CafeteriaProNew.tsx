@@ -1,16 +1,19 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Button,
   Card,
   Title2,
   Body2,
   makeStyles,
+  shorthands,
   Badge,
   Dialog,
   DialogTrigger,
   DialogContent,
   DialogBody,
   DialogTitle,
+  DialogSurface,
   Input,
   Select,
   Spinner
@@ -19,7 +22,8 @@ import {
   ShoppingBag24Regular,
   Add24Regular,
   Delete24Regular,
-  Checkmark24Regular
+  Checkmark24Regular,
+  ArrowLeftRegular
 } from '@fluentui/react-icons'
 import axios from 'axios'
 import { CAFETERIAS, MENU_CATEGORIES, PAYMENT_METHODS } from '../utils/constants'
@@ -35,23 +39,39 @@ const Body1 = ({ children, ...props }: any) => (
 const useStyles = makeStyles({
   container: {
     padding: '24px',
-    backgroundColor: '#f5f5f5',
+    background: 'transparent',
     minHeight: '100vh',
     maxWidth: '1400px',
-    margin: '0 auto'
+    margin: '0 auto',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '20px',
   },
   header: {
     textAlign: 'center',
-    padding: '20px',
-    backgroundColor: '#667eea',
-    borderRadius: '12px',
-    color: 'white',
-    marginBottom: '24px'
+    padding: '30px',
+    background: 'rgba(20, 20, 20, 0.4)',
+    backdropFilter: 'blur(10px)',
+    borderRadius: '16px',
+    border: '1px solid rgba(255, 255, 255, 0.05)',
+    marginBottom: '24px',
+  },
+  headerTitle: {
+    fontSize: '32px',
+    fontWeight: '800',
+    background: 'linear-gradient(135deg, #FFB800 0%, #FF6B00 100%)',
+    '-webkit-background-clip': 'text',
+    '-webkit-text-fill-color': 'transparent',
+    marginBottom: '8px',
+  },
+  headerSubtitle: {
+    color: '#aaa',
+    fontSize: '16px',
   },
   mainGrid: {
     display: 'grid',
-    gridTemplateColumns: '1fr 350px',
-    gap: '20px',
+    gridTemplateColumns: '1fr 380px',
+    gap: '24px',
     '@media (max-width: 1024px)': {
       gridTemplateColumns: '1fr'
     }
@@ -63,28 +83,43 @@ const useStyles = makeStyles({
     marginBottom: '24px'
   },
   cafeteriaCard: {
-    padding: '16px',
+    ...shorthands.padding('20px'),
     cursor: 'pointer',
-    transition: 'all 0.3s ease',
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    background: 'rgba(255, 255, 255, 0.03)',
+    ...shorthands.border('1px', 'solid', 'rgba(255, 255, 255, 0.05)'),
+    ...shorthands.borderRadius('12px'),
     '&:hover': {
-      boxShadow: '0 8px 16px rgba(0,0,0,0.12)',
+      background: 'rgba(255, 255, 255, 0.06)',
+      ...shorthands.borderColor('rgba(255, 184, 0, 0.3)'),
       transform: 'translateY(-4px)'
     },
-    border: '2px solid #e0e0e0',
     '&.selected': {
-      backgroundColor: '#f0f0f0'
+      ...shorthands.borderColor('#FFB800'),
+      background: 'rgba(255, 184, 0, 0.05)',
+      boxShadow: '0 0 15px rgba(255, 184, 0, 0.1)',
     }
   },
   categorySelector: {
     display: 'flex',
-    gap: '8px',
-    marginBottom: '16px',
+    gap: '10px',
+    marginBottom: '20px',
     overflowX: 'auto',
-    paddingBottom: '8px'
+    paddingBottom: '10px',
+    msOverflowStyle: 'none',
+    scrollbarWidth: 'none',
+    '&::-webkit-scrollbar': {
+      display: 'none'
+    }
   },
   categoryButton: {
     whiteSpace: 'nowrap',
-    minWidth: '100px'
+    ...shorthands.borderRadius('10px'),
+    ...shorthands.padding('8px', '20px'),
+    '&.selected': {
+        background: '#FFB800',
+        color: '#000',
+    }
   },
   menuGrid: {
     display: 'grid',
@@ -92,74 +127,119 @@ const useStyles = makeStyles({
     gap: '16px'
   },
   menuItem: {
-    padding: '12px',
-    border: '1px solid #e0e0e0',
-    borderRadius: '8px',
-    transition: 'all 0.2s ease',
+    ...shorthands.padding('16px'),
+    background: 'rgba(255, 255, 255, 0.03)',
+    ...shorthands.border('1px', 'solid', 'rgba(255, 255, 255, 0.05)'),
+    ...shorthands.borderRadius('12px'),
+    transition: 'all 0.3s ease',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
     '&:hover': {
-      backgroundColor: '#f5f5f5'
+      background: 'rgba(255, 255, 255, 0.06)',
+      ...shorthands.borderColor('rgba(255, 184, 0, 0.3)'),
     }
   },
   itemHeader: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: '8px'
   },
   price: {
-    fontSize: '18px',
-    fontWeight: '700',
-    color: '#667eea'
+    fontSize: '20px',
+    fontWeight: '800',
+    color: '#FFB800'
   },
   cartSidebar: {
-    backgroundColor: '#ffffff',
-    padding: '16px',
-    borderRadius: '12px',
+    background: 'rgba(15, 15, 15, 0.6)',
+    backdropFilter: 'blur(16px)',
+    padding: '24px',
+    borderRadius: '16px',
     height: 'fit-content',
     position: 'sticky',
     top: '20px',
-    boxShadow: '0 4px 8px rgba(0,0,0,0.08)'
+    border: '1px solid rgba(255, 255, 255, 0.05)',
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
   },
   cartItem: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: '8px',
+    padding: '12px',
     marginBottom: '8px',
-    backgroundColor: '#f5f5f5',
-    borderRadius: '4px',
-    fontSize: '12px'
+    background: 'rgba(255, 255, 255, 0.03)',
+    borderRadius: '8px',
+    border: '1px solid rgba(255, 255, 255, 0.05)',
   },
   cartTotal: {
     display: 'flex',
     justifyContent: 'space-between',
-    fontWeight: 'bold',
-    padding: '12px',
-    borderTop: '2px solid #e0e0e0',
-    marginTop: '12px',
-    marginBottom: '12px'
+    fontWeight: '800',
+    fontSize: '20px',
+    padding: '16px 0',
+    borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+    marginTop: '16px',
+    color: '#FFB800',
   },
   checkoutForm: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '12px'
+    gap: '16px'
   },
-  receiptContent: {
-    fontFamily: 'monospace',
-    fontSize: '12px',
-    lineHeight: '1.6',
-    padding: '16px',
-    backgroundColor: '#f5f5f5',
+  input: {
+    padding: '12px',
+    background: 'rgba(255, 255, 255, 0.05)',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
     borderRadius: '8px',
-    maxHeight: '400px',
-    overflowY: 'auto'
+    color: '#fff',
+  },
+  checkoutButton: {
+    background: 'linear-gradient(135deg, #FF9E00 0%, #FF6B00 100%)',
+    color: '#000',
+    fontWeight: '700',
+    padding: '14px',
+    borderRadius: '10px',
+    border: 'none',
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
+    '&:hover': {
+        boxShadow: '0 0 20px rgba(255, 107, 0, 0.3)',
+        filter: 'brightness(1.1)',
+    }
+  },
+  backButton: {
+    background: 'rgba(255, 255, 255, 0.05)',
+    ...shorthands.border('1px', 'solid', 'rgba(255, 255, 255, 0.1)'),
+    color: '#fff',
+    ...shorthands.padding('10px', '20px'),
+    ...shorthands.borderRadius('12px'),
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: '600',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    transition: 'all 0.3s ease',
+    alignSelf: 'flex-start',
+    '&:hover': {
+      background: 'rgba(255, 255, 255, 0.1)',
+      ...shorthands.borderColor('#FFB800'),
+      transform: 'translateX(-5px)',
+    }
   },
   successMessage: {
     textAlign: 'center',
-    padding: '24px',
-    backgroundColor: '#90EE90',
-    borderRadius: '12px',
-    color: 'white'
+    padding: '40px 24px',
+    background: 'rgba(20, 20, 20, 0.6)',
+    backdropFilter: 'blur(16px)',
+    borderRadius: '16px',
+    border: '1px solid rgba(255, 184, 0, 0.2)',
+    color: 'white',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '20px',
   }
 })
 
@@ -177,13 +257,14 @@ interface SelectedCafeteria {
 
 export default function CafeteriaNew() {
   const styles = useStyles()
+  const navigate = useNavigate()
   const [selectedCafeteria, setSelectedCafeteria] = useState<SelectedCafeteria>(CAFETERIAS[0])
   const [selectedCategory, setSelectedCategory] = useState('desayunos')
   const [cart, setCart] = useState<CartItem[]>([])
   const [userName, setUserName] = useState('')
   const [userEmail, setUserEmail] = useState('')
   const [paymentMethod, setPaymentMethod] = useState('cash')
-  const [isCheckoutOpen] = useState(false)
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
   const [orderComplete, setOrderComplete] = useState(false)
   const [orderId, setOrderId] = useState('')
@@ -329,32 +410,34 @@ ${cart.map(item =>
 
   return (
     <div className={styles.container}>
+      {/* Back Button */}
+      <button className={styles.backButton} onClick={() => navigate('/')}>
+        <ArrowLeftRegular /> Volver al Inicio
+      </button>
+
       {/* Header */}
       <div className={styles.header}>
-        <Title2 style={{ color: 'white', marginBottom: '8px' }}>☕ Cafetería UCE</Title2>
-        <Body1 style={{ color: 'rgba(255,255,255,0.8)' }}>Selecciona tu cafetería y realiza tu pedido</Body1>
+        <h1 className={styles.headerTitle}>☕ Cafetería UCE</h1>
+        <p className={styles.headerSubtitle}>Selecciona tu cafetería y realiza tu pedido con rapidez</p>
       </div>
 
       {/* Cafeterías */}
       <div>
-        <Title3 style={{ marginBottom: '12px' }}>🏪 Cafeterías Disponibles</Title3>
+        <Title3 style={{ marginBottom: '16px', color: '#fff' }}>🏪 Cafeterías Disponibles</Title3>
         <div className={styles.cafeteriaGrid}>
           {CAFETERIAS.map(cafe => (
-            <Card
+            <div
               key={cafe.id}
               className={`${styles.cafeteriaCard} ${selectedCafeteria.id === cafe.id ? 'selected' : ''}`}
               onClick={() => setSelectedCafeteria(cafe)}
-              style={{
-                borderColor: selectedCafeteria.id === cafe.id ? '#667eea' : undefined
-              }}
             >
-              <Body1 style={{ fontSize: '24px', marginBottom: '8px' }}>{cafe.image}</Body1>
-              <Title3 style={{ marginBottom: '4px' }}>{cafe.name}</Title3>
-              <Body2>{cafe.location}</Body2>
-              <Body2 style={{ color: '#666666', marginTop: '8px' }}>
+              <div style={{ fontSize: '32px', marginBottom: '12px' }}>{cafe.image}</div>
+              <Title3 style={{ marginBottom: '4px', color: '#fff' }}>{cafe.name}</Title3>
+              <Body2 style={{ color: '#aaa' }}>{cafe.location}</Body2>
+              <Body2 style={{ color: '#FFB800', marginTop: '8px', fontWeight: '600' }}>
                 {cafe.hours}
               </Body2>
-            </Card>
+            </div>
           ))}
         </div>
       </div>
@@ -362,44 +445,54 @@ ${cart.map(item =>
       <div className={styles.mainGrid}>
         {/* Menu */}
         <div>
-          <Title3 style={{ marginBottom: '12px' }}>🍽️ Menú</Title3>
+          <Title3 style={{ marginBottom: '16px', color: '#fff' }}>🍽️ Menú - {selectedCafeteria.name}</Title3>
           
           {/* Category Selector */}
           <div className={styles.categorySelector}>
             {Object.entries(MENU_CATEGORIES).map(([key, category]) => (
-              <Button
+              <button
                 key={key}
-                className={styles.categoryButton}
-                appearance={selectedCategory === key ? 'primary' : 'outline'}
+                className={`${styles.categoryButton} ${selectedCategory === key ? 'selected' : ''}`}
+                style={{
+                  background: selectedCategory === key ? '#FFB800' : 'rgba(255,255,255,0.05)',
+                  color: selectedCategory === key ? '#000' : '#fff',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: '10px 20px',
+                  borderRadius: '10px',
+                  transition: 'all 0.2s ease',
+                  fontWeight: '600'
+                }}
                 onClick={() => setSelectedCategory(key)}
               >
                 {category.icon} {category.name}
-              </Button>
+              </button>
             ))}
           </div>
 
           {/* Menu Items */}
           <div className={styles.menuGrid}>
             {currentMenu.items.map(item => (
-              <Card key={item.id} className={styles.menuItem}>
+              <div key={item.id} className={styles.menuItem}>
                 <div className={styles.itemHeader}>
                   <div>
-                    <Body1><strong>{item.name}</strong></Body1>
-                    <Body2 style={{ fontSize: '12px', color: '#666666', marginTop: '4px' }}>
+                    <Body1 style={{ color: '#fff', fontWeight: 'bold' }}>{item.name}</Body1>
+                    <Body2 style={{ fontSize: '12px', color: '#888', marginTop: '4px', display: 'block' }}>
                       {item.description}
                     </Body2>
                   </div>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px' }}>
                   <div className={styles.price}>${item.price.toFixed(2)}</div>
                   <Button
                     icon={<Add24Regular />}
                     appearance="primary"
                     size="small"
+                    style={{ background: '#FFB800', color: '#000' }}
                     onClick={() => addToCart(item)}
                   />
                 </div>
-              </Card>
+              </div>
             ))}
           </div>
         </div>
@@ -407,77 +500,140 @@ ${cart.map(item =>
         {/* Cart Sidebar */}
         <div className={styles.cartSidebar}>
           <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px', gap: '8px' }}>
-            <ShoppingBag24Regular />
-            <Title3>Carrito</Title3>
-            {cart.length > 0 && <Badge>{getTotalItems()}</Badge>}
+            <ShoppingBag24Regular style={{ color: '#FFB800' }} />
+            <Title3 style={{ color: '#fff' }}>Carrito</Title3>
+            {cart.length > 0 && <Badge appearance="filled" color="important">{getTotalItems()}</Badge>}
           </div>
 
           {cart.length === 0 ? (
-            <Body2 style={{ color: '#666666' }}>
+            <Body2 style={{ color: '#666' }}>
               Tu carrito está vacío
             </Body2>
           ) : (
             <>
-              {cart.map(item => (
-                <div key={item.id} className={styles.cartItem}>
-                  <div>
-                    <div><strong>{item.name}</strong></div>
-                    <div>${(item.price * item.quantity).toFixed(2)}</div>
+              <div style={{ maxHeight: '300px', overflowY: 'auto', marginBottom: '16px' }}>
+                {cart.map(item => (
+                  <div key={item.id} className={styles.cartItem}>
+                    <div style={{ flex: 1 }}>
+                      <Body1 style={{ color: '#fff', fontWeight: '600', fontSize: '14px' }}>{item.name}</Body1>
+                      <Body2 style={{ color: '#FFB800' }}>${(item.price * item.quantity).toFixed(2)}</Body2>
+                    </div>
+                    <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                      <Button
+                        size="small"
+                        appearance="subtle"
+                        style={{ color: '#fff' }}
+                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                      >
+                        −
+                      </Button>
+                      <span style={{ minWidth: '20px', textAlign: 'center', color: '#fff' }}>{item.quantity}</span>
+                      <Button
+                        size="small"
+                        appearance="subtle"
+                        style={{ color: '#fff' }}
+                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                      >
+                        +
+                      </Button>
+                      <Button
+                        size="small"
+                        appearance="subtle"
+                        style={{ color: '#f44' }}
+                        onClick={() => removeFromCart(item.id)}
+                        icon={<Delete24Regular />}
+                      />
+                    </div>
                   </div>
-                  <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-                    <Button
-                      size="small"
-                      appearance="subtle"
-                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                    >
-                      −
-                    </Button>
-                    <span style={{ minWidth: '20px', textAlign: 'center' }}>{item.quantity}</span>
-                    <Button
-                      size="small"
-                      appearance="subtle"
-                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                    >
-                      +
-                    </Button>
-                    <Button
-                      size="small"
-                      appearance="subtle"
-                      onClick={() => removeFromCart(item.id)}
-                      icon={<Delete24Regular />}
-                    />
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
 
               <div className={styles.cartTotal}>
-                <span>Subtotal:</span>
-                <span>${getTotalPrice().toFixed(2)}</span>
-              </div>
-
-              <div className={styles.cartTotal} style={{ borderTop: 'none', marginTop: '0', marginBottom: '0' }}>
-                <span>Impuesto (10%):</span>
-                <span>${(getTotalPrice() * 0.1).toFixed(2)}</span>
-              </div>
-
-              <div className={styles.cartTotal} style={{ fontSize: '16px' }}>
                 <span>TOTAL:</span>
                 <span>${(getTotalPrice() * 1.1).toFixed(2)}</span>
               </div>
 
-              <Button
-                appearance="primary"
-                onClick={handleCheckout}
-                style={{
-                  width: '100%',
-                  marginTop: '12px',
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  color: 'white',
-                  border: 'none',
-                }}
-              >
-                Proceder a Pagar
-              </Button>
+              <Dialog open={isCheckoutOpen} onOpenChange={(_, data) => setIsCheckoutOpen(data.open)}>
+                <DialogTrigger disableButtonEnhancement>
+                  <button className={styles.checkoutButton} style={{ width: '100%', marginTop: '12px' }}>
+                    Proceder a Pagar
+                  </button>
+                </DialogTrigger>
+                <DialogSurface style={{ background: '#111', color: '#fff', border: '1px solid #333' }}>
+                  <DialogBody>
+                    <DialogTitle style={{ color: '#FFB800' }}>Confirmar Pedido</DialogTitle>
+                    <DialogContent>
+                      <div style={{ marginBottom: '16px' }}>
+                        <Title3 style={{ color: '#fff' }}>Resumen del Pedido</Title3>
+                        {cart.map(item => (
+                          <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', margin: '8px 0', fontSize: '14px', color: '#ccc' }}>
+                            <span>{item.name} x{item.quantity}</span>
+                            <span>${(item.price * item.quantity).toFixed(2)}</span>
+                          </div>
+                        ))}
+                        <div style={{ borderTop: '1px solid #333', paddingTop: '8px', marginTop: '8px', fontWeight: 'bold' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', color: '#FFB800', fontSize: '18px' }}>
+                            <span>Total:</span>
+                            <span>${(getTotalPrice() * 1.1).toFixed(2)}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className={styles.checkoutForm}>
+                        <div style={{ marginBottom: '12px' }}>
+                          <label style={{ fontSize: '13px', fontWeight: '600', display: 'block', marginBottom: '6px', color: '#aaa' }}>Nombre Completo *</label>
+                          <input
+                            className={styles.input}
+                            value={userName}
+                            onChange={(e) => setUserName(e.target.value)}
+                            placeholder="Tu nombre"
+                            style={{ width: '100%' }}
+                          />
+                        </div>
+
+                        <div style={{ marginBottom: '12px' }}>
+                          <label style={{ fontSize: '13px', fontWeight: '600', display: 'block', marginBottom: '6px', color: '#aaa' }}>Email *</label>
+                          <input
+                            type="email"
+                            className={styles.input}
+                            value={userEmail}
+                            onChange={(e) => setUserEmail(e.target.value)}
+                            placeholder="tu@email.com"
+                            style={{ width: '100%' }}
+                          />
+                        </div>
+
+                        <div style={{ marginBottom: '12px' }}>
+                          <label style={{ fontSize: '13px', fontWeight: '600', display: 'block', marginBottom: '6px', color: '#aaa' }}>Método de Pago</label>
+                          <select
+                            className={styles.input}
+                            value={paymentMethod}
+                            onChange={(e) => setPaymentMethod(e.target.value)}
+                            style={{ width: '100%', appearance: 'none' }}
+                          >
+                            <option value="cash">Efectivo</option>
+                            <option value="card">Tarjeta</option>
+                            <option value="transfer">Transferencia</option>
+                          </select>
+                        </div>
+                      </div>
+                    </DialogContent>
+                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '24px' }}>
+                      <Button appearance="subtle" style={{ color: '#fff' }} onClick={() => setIsCheckoutOpen(false)}>
+                        Cancelar
+                      </Button>
+                      <button
+                        className={styles.checkoutButton}
+                        onClick={handleCheckout}
+                        disabled={isProcessing || !userName || !userEmail}
+                        style={{ padding: '8px 24px' }}
+                      >
+                        {isProcessing ? 'Procesando...' : 'Confirmar Pedido'}
+                      </button>
+                    </div>
+                  </DialogBody>
+                </DialogSurface>
+              </Dialog>
             </>
           )}
         </div>

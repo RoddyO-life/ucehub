@@ -94,9 +94,22 @@ output "target_group_arn" {
 }
 
 output "load_balancer_summary" {
-  description = "Resumen del Load Balancer"
+  description = "Resumen del LB"
   value       = module.load_balancer.load_balancer_summary
 }
+
+# ========================================
+# Cache Outputs
+# ========================================
+
+output "redis_endpoint" {
+  description = "Endpoint del cluster de Redis"
+  value       = module.cache.redis_endpoint
+}
+
+# ========================================
+# Final Summary
+# ========================================
 
 # ========================================
 # Compute Outputs
@@ -146,9 +159,48 @@ output "infrastructure_complete_summary" {
     min_instances = module.compute.compute_summary.min_instances
     max_instances = module.compute.compute_summary.max_instances
 
-    # Cost estimate
-    estimated_monthly_cost = "$3.50 (NAT) + ~$15-30 (EC2) + ~$16 (ALB) = ~$35-50/month"
+    # Cache & Resiliency
+    redis_endpoint = module.cache.redis_endpoint
+    backups_enabled = "DynamoDB PITR Enabled (35 days)"
+
+    # Costs
+    estimated_monthly_cost = "$3.50 (NAT) + ~$15-30 (EC2) + ~$16 (ALB) + ~$10 (Redis) = ~$45-70/month"
   }
+}
+
+# ========================================
+# Monitoring Outputs (Prometheus + Grafana)
+# ========================================
+
+output "grafana_url" {
+  description = "URL para acceder a Grafana"
+  value       = module.monitoring.grafana_url
+}
+
+output "prometheus_url" {
+  description = "URL para acceder a Prometheus"
+  value       = module.monitoring.prometheus_url
+}
+
+output "monitoring_instance_id" {
+  description = "ID de la instancia de Monitoreo"
+  value       = module.monitoring.monitoring_instance_id
+}
+
+output "monitoring_asg_name" {
+  description = "Nombre del ASG de Monitoreo"
+  value       = module.monitoring.monitoring_asg_name
+}
+
+output "monitoring_summary" {
+  description = "Resumen de servicios de monitoreo"
+  value = {
+    grafana_url      = module.monitoring.grafana_url
+    prometheus_url   = module.monitoring.prometheus_url
+    grafana_username = "admin"
+    grafana_password = "GrafanaAdmin@2024!"
+  }
+  sensitive = true
 }
 
 
