@@ -24,7 +24,7 @@ jobs:
         run: npm ci
 
       - name: Nx Check
-        run: npx nx affected:lint --base=HEAD~1
+        run: npx nx lint --all
 
   # Job 2: QA Deployment (Branch: feature/prod-deployment)
   deploy-qa:
